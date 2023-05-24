@@ -14,8 +14,9 @@
   "contributes": {
     "commands": [
       {
-        "command": "localstack.helloWorld",
-        "title": "Hello World"
+        "command": "localstack.deploy",
+        "title": "Deploy Lambda function",
+        "category": "LocalStack"
       }
     ]
   },
