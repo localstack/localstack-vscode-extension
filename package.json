@@ -17,6 +17,16 @@
         "command": "localstack.deploy",
         "title": "Deploy Lambda function",
         "category": "LocalStack"
+      },
+      {
+        "command": "localstack.invoke",
+        "title": "Invoke Lambda function",
+        "category": "LocalStack"
+      },
+      {
+        "command": "localstack.info",
+        "title": "Print samlocal version",
+        "category": "LocalStack"
       }
     ]
   },
