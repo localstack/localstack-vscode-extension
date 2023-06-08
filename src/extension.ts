@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 			await showInformationMessage();
 		}),
 		vscode.commands.registerCommand('localstack.deploy', async () => {
-			await deployLambda();
+			await deployLambda(context);
 		}),
 		vscode.commands.registerCommand('localstack.invoke', async () => {
 			await invokeLambda();
