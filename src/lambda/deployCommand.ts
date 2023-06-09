@@ -7,90 +7,98 @@ import { MultiStepInput } from "../utils/multiStepInput";
 export async function deployLambda(context: vscode.ExtensionContext) {
   // TODO: show wizard with list of template.yaml in the project
 
-    // Add VSCode multi-step sample: https://github.com/microsoft/vscode-extension-samples/blob/main/quickinput-sample/src/multiStepInput.ts
+    // Based on VSCode multi-step sample:
+    // https://github.com/microsoft/vscode-extension-samples/blob/main/quickinput-sample/src/multiStepInput.ts
     class MyButton implements QuickInputButton {
         constructor(public iconPath: { light: Uri; dark: Uri; }, public tooltip: string) { }
     }
 
-    const createResourceGroupButton = new MyButton({
+    const createDeploymentConfigButton = new MyButton({
         dark: Uri.file(context.asAbsolutePath('resources/dark/add.svg')),
         light: Uri.file(context.asAbsolutePath('resources/light/add.svg')),
-    }, 'Create Resource Group');
+    }, 'Create Deployment Configuration ...');
 
-    const resourceGroups: QuickPickItem[] = [
-        "vscode-data-function",
-        "vscode-appservice-microservices",
-        "vscode-appservice-monitor",
-        "vscode-appservice-preview",
-        "vscode-appservice-prod",
+    // TODO: populate dynamically
+    // TODO: implement Quick Deploy
+    // MAYBE: implement custom deployment configuration ...
+    const deploymentConfigs: QuickPickItem[] = [
+        "template.yaml",
+        "template.yaml:HelloWorldFunction",
+        "Quick Deploy",
+        "Create Deployment Configuration ...",
     ].map((label) => ({ label }));
 
     interface State {
 		title: string;
 		step: number;
 		totalSteps: number;
-		resourceGroup: QuickPickItem | string;
-		name: string;
+		deploymentConfig: QuickPickItem | string;
+		stackName: string;
 		runtime: QuickPickItem;
 	}
 
     async function collectInputs() {
         const state = {} as Partial<State>;
-        await MultiStepInput.run(input => pickResourceGroup(input, state));
+        await MultiStepInput.run(input => pickDeploymentConfig(input, state));
         return state as State;
     }
 
-	const title = 'Create Application Service';
+	const title = 'Deploy a Lambda Function';
 
-	async function pickResourceGroup(input: MultiStepInput, state: Partial<State>) {
+	async function pickDeploymentConfig(input: MultiStepInput, state: Partial<State>) {
 		const pick = await input.showQuickPick({
 			title,
 			step: 1,
-			totalSteps: 3,
-			placeholder: 'Pick a resource group',
-			items: resourceGroups,
-			activeItem: typeof state.resourceGroup !== 'string' ? state.resourceGroup : undefined,
-			buttons: [createResourceGroupButton],
+			totalSteps: 2,
+			placeholder: 'Pick a deployment configuration',
+			items: deploymentConfigs,
+			activeItem: typeof state.deploymentConfig !== 'string' ? state.deploymentConfig : undefined,
+			buttons: [createDeploymentConfigButton],
 			shouldResume: shouldResume
 		});
+        // TODO: handle custom creation of deployment configuration
 		if (pick instanceof MyButton) {
-			return (input: MultiStepInput) => inputResourceGroupName(input, state);
+			return (input: MultiStepInput) => inputDeploymentConfigName(input, state);
 		}
-		state.resourceGroup = pick;
-		return (input: MultiStepInput) => inputName(input, state);
+		state.deploymentConfig = pick;
+        if (pick.label === 'Quick Deploy') {
+            return (input: MultiStepInput) => pickRuntime(input, state);
+        } else {
+            return (input: MultiStepInput) => inputStackName(input, state);
+        }
 	}
 
-	async function inputResourceGroupName(input: MultiStepInput, state: Partial<State>) {
-		state.resourceGroup = await input.showInputBox({
+    // TODO: handle creation of custom deployment configuration
+	async function inputDeploymentConfigName(input: MultiStepInput, state: Partial<State>) {
+		state.deploymentConfig = await input.showInputBox({
 			title,
 			step: 2,
 			totalSteps: 4,
-			value: typeof state.resourceGroup === 'string' ? state.resourceGroup : '',
-			prompt: 'Choose a unique name for the resource group',
+			value: typeof state.deploymentConfig === 'string' ? state.deploymentConfig : '',
+			prompt: 'Choose a unique name for the deployment configuration',
 			validate: validateNameIsUnique,
 			shouldResume: shouldResume
 		});
-		return (input: MultiStepInput) => inputName(input, state);
+		return (input: MultiStepInput) => inputStackName(input, state);
 	}
 
-	async function inputName(input: MultiStepInput, state: Partial<State>) {
-		const additionalSteps = typeof state.resourceGroup === 'string' ? 1 : 0;
+	async function inputStackName(input: MultiStepInput, state: Partial<State>) {
+		const additionalSteps = typeof state.deploymentConfig === 'string' ? 1 : 0;
 		// TODO: Remember current value when navigating back.
-		state.name = await input.showInputBox({
+		state.stackName = await input.showInputBox({
 			title,
 			step: 2 + additionalSteps,
-			totalSteps: 3 + additionalSteps,
-			value: state.name || '',
-			prompt: 'Choose a unique name for the Application Service',
+			totalSteps: 2 + additionalSteps,
+			value: state.stackName || '',
+			prompt: 'Choose a unique name for the CloudFormation Stack',
 			validate: validateNameIsUnique,
 			shouldResume: shouldResume
 		});
-		return (input: MultiStepInput) => pickRuntime(input, state);
 	}
 
 	async function pickRuntime(input: MultiStepInput, state: Partial<State>) {
-		const additionalSteps = typeof state.resourceGroup === 'string' ? 1 : 0;
-		const runtimes = await getAvailableRuntimes(state.resourceGroup!, undefined /* TODO: token */);
+		const additionalSteps = typeof state.deploymentConfig === 'string' ? 1 : 0;
+		const runtimes = await getAvailableRuntimes(undefined /* TODO: token */);
 		// TODO: Remember currently active item when navigating back.
 		state.runtime = await input.showQuickPick({
 			title,
@@ -116,20 +124,23 @@ export async function deployLambda(context: vscode.ExtensionContext) {
 		return name === 'vscode' ? 'Name not unique' : undefined;
 	}
 
-	async function getAvailableRuntimes(resourceGroup: QuickPickItem | string, token?: CancellationToken): Promise<QuickPickItem[]> {
-		// ...retrieve...
-		await new Promise(resolve => setTimeout(resolve, 1000));
-		return ['Node 8.9', 'Node 6.11', 'Node 4.5']
+	async function getAvailableRuntimes(token?: CancellationToken): Promise<QuickPickItem[]> {
+		// await new Promise(resolve => setTimeout(resolve, 1000));
+        // Source: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+		return ['python3.7', 'python3.8', 'python3.9', 'python3.10']
 			.map(label => ({ label }));
 	}
 
 	const state = await collectInputs();
-	window.showInformationMessage(`Creating Application Service '${state.name}'`);
-
-  // TODO: build dynamic sam deploy command based on template location
 
     // The code you place here will be executed every time your command is executed
-    vscode.window.showInformationMessage(`Deploying Lambda function to LocalStack ...`);
-    const stdout = await execShell("cd /Users/joe/Projects/Lambda-IDE-Integration/lambda-python && make deploy");
+    vscode.window.showInformationMessage(`Deploying Lambda function to LocalStack using ${state.stackName} ...`);
+    // const deployCmd = `samlocal deploy --template template.yaml --stack-name lambda-python-stack --region us-east-1 --resolve-s3 --no-confirm-changeset`
+    // HACK: workaround type checking
+    const deploymentConfig: any = state.deploymentConfig;
+    const deployCmd = `samlocal deploy --template ${deploymentConfig.label} --stack-name ${state.stackName} --resolve-s3 --no-confirm-changeset`
+    // vscode.window.showInformationMessage(`deployCmd=${deployCmd}`);
+    // const stdout = await execShell("cd /Users/joe/Projects/Lambda-IDE-Integration/lambda-python && make deploy");
+    const stdout = await execShell(`cd /Users/joe/Projects/Lambda-IDE-Integration/lambda-python && ${deployCmd}`);
     vscode.window.showInformationMessage(`Lambda function deployed to LocalStack.`);
 }
