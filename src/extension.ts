@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 import { showInformationMessage } from './lambda/infoCommand';
 import { deployLambda } from './lambda/deployCommand';
 import { invokeLambda } from './lambda/invokeCommand';
+import MyCodeLensProvider from './lambda/myCodeLensProvider';
+import { addPrintLog } from './lambda/addPrintCommand';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -28,6 +30,30 @@ export function activate(context: vscode.ExtensionContext) {
 			await invokeLambda();
 		}),
 	);
+
+	// Example based on https://vscode.rocks/codelens/
+	// Register the command
+	let commandDisposable = vscode.commands.registerCommand(
+	"extension.addPrintLog",
+	addPrintLog
+	);
+
+	// Get a document selector for the CodeLens provider
+	// This one is any file that has the language of python
+	let docSelector = {
+	language: "python",
+	scheme: "file"
+	};
+
+	// Register our CodeLens provider
+	let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+	docSelector,
+	new MyCodeLensProvider()
+	);
+
+	// Push the command and CodeLens provider to the context so it can be disposed of later
+	context.subscriptions.push(commandDisposable);
+	context.subscriptions.push(codeLensProviderDisposable);
 }
 
 // This method is called when your extension is deactivated
