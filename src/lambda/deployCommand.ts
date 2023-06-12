@@ -18,7 +18,15 @@ export async function deployLambda(context: vscode.ExtensionContext) {
         light: Uri.file(context.asAbsolutePath('resources/light/add.svg')),
     }, 'Create Deployment Configuration ...');
 
-    // TODO: populate dynamically
+    // TODO: fetch handler path from CodeLens
+    const handlerPath = '/Users/joe/Projects/Lambda-IDE-Integration/lambda-python/hello_world/app.py';
+    const rootUri = vscode.Uri.file('/Users/joe/Projects/Lambda-IDE-Integration/lambda-python/hello_world/app.py') || vscode.workspace.workspaceFile;
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(rootUri);
+    if (!workspaceFolder) {
+        vscode.window.showErrorMessage(`Workspace undefined. Please open a workspace.`);
+    }
+
+    // TODO: populate dynamically => This is harder than expected. The CodeLens implementation behind identifying and especially filtering candidate handlers based on CloudFormation heuristics using file watchers is quite involved.
     // TODO: implement Quick Deploy
     // MAYBE: implement custom deployment configuration ...
     const deploymentConfigs: QuickPickItem[] = [
