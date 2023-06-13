@@ -1,4 +1,4 @@
-// Source: https://github.com/lannonbr/vscode-codelens-example/blob/master/src/myCodeLensProvider.ts
+// Initially based on: https://github.com/lannonbr/vscode-codelens-example/blob/master/src/myCodeLensProvider.ts
 
 import {
   CodeLensProvider,
@@ -13,15 +13,17 @@ class MyCodeLensProvider implements CodeLensProvider {
   // the code lenses
   async provideCodeLenses(document: TextDocument): Promise<CodeLens[]> {
     // Define where the CodeLens will exist
-    let topOfDocument = new Range(0, 0, 0, 0);
+    // TODO: show directly at lambda handler
+    const topOfDocument = new Range(0, 0, 0, 0);
 
     // Define what command we want to trigger when activating the CodeLens
-    let c: Command = {
-      command: "extension.addPrintLog",
-      title: "Insert print log",
+    const command: Command = {
+      command: "localstack.deploy",
+      title: "LocalStack: Deploy Lambda function",
+      // TODO: add arguments with document.uri
     };
 
-    let codeLens = new CodeLens(topOfDocument, c);
+    const codeLens = new CodeLens(topOfDocument, command);
 
     return [codeLens];
   }

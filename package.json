@@ -29,10 +29,6 @@
         "command": "localstack.info",
         "title": "Print samlocal version",
         "category": "LocalStack"
-      },
-      {
-        "command": "extension.addPrintLog",
-        "title": "Add Print Log"
       }
     ]
   },
