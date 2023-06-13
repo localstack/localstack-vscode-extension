@@ -4,7 +4,7 @@ import { CancellationToken, QuickInputButton, QuickPickItem, Uri, window } from 
 import { MultiStepInput } from "../utils/multiStepInput";
 import { findCFNTemplates } from "../utils/templateFinder";
 
-export async function deployLambda(context: vscode.ExtensionContext) {
+export async function deployLambda(handlerUri: vscode.Uri | undefined, context: vscode.ExtensionContext) {
     // Based on VSCode multi-step sample:
     // https://github.com/microsoft/vscode-extension-samples/blob/main/quickinput-sample/src/multiStepInput.ts
     class MyButton implements QuickInputButton {
@@ -16,12 +16,13 @@ export async function deployLambda(context: vscode.ExtensionContext) {
         light: Uri.file(context.asAbsolutePath('resources/light/add.svg')),
     }, 'Create Deployment Configuration ...');
 
-    // TODO: fetch hardcoded handler path from CodeLens
-    const handlerPath = '/Users/joe/Projects/Lambda-IDE-Integration/lambda-python/hello_world/app.py';
-	const handlerUri = vscode.Uri.file(handlerPath);
+	if (!handlerUri) {
+		vscode.window.showErrorMessage('Handler undefined. Please use a CodeLens to invoke the deploy command.');
+		return undefined;
+	}
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(handlerUri);
     if (!workspaceFolder) {
-        vscode.window.showErrorMessage(`Workspace undefined. Please open a workspace.`);
+        vscode.window.showErrorMessage('Workspace undefined. Please open a workspace.');
 		return undefined;
     }
 	const templates = await findCFNTemplates(workspaceFolder.uri.fsPath);

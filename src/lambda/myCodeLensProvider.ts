@@ -21,6 +21,7 @@ class MyCodeLensProvider implements CodeLensProvider {
       command: "localstack.deploy",
       title: "LocalStack: Deploy Lambda function",
       // TODO: add arguments with document.uri
+      arguments: [document.uri]
     };
 
     const codeLens = new CodeLens(topOfDocument, command);

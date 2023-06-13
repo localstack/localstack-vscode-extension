@@ -22,8 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('localstack.info', async () => {
 			await showInformationMessage();
 		}),
-		vscode.commands.registerCommand('localstack.deploy', async () => {
-			await deployLambda(context);
+		vscode.commands.registerCommand('localstack.deploy', async (handlerUri: vscode.Uri | undefined) => {
+			await deployLambda(handlerUri, context);
 		}),
 		vscode.commands.registerCommand('localstack.invoke', async () => {
 			await invokeLambda();
