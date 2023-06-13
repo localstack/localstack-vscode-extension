@@ -2,11 +2,9 @@ import * as vscode from "vscode";
 import { execShell } from "../utils/shell";
 import { CancellationToken, QuickInputButton, QuickPickItem, Uri, window } from "vscode";
 import { MultiStepInput } from "../utils/multiStepInput";
-
+import { findCFNTemplates } from "../utils/templateFinder";
 
 export async function deployLambda(context: vscode.ExtensionContext) {
-  // TODO: show wizard with list of template.yaml in the project
-
     // Based on VSCode multi-step sample:
     // https://github.com/microsoft/vscode-extension-samples/blob/main/quickinput-sample/src/multiStepInput.ts
     class MyButton implements QuickInputButton {
@@ -18,23 +16,26 @@ export async function deployLambda(context: vscode.ExtensionContext) {
         light: Uri.file(context.asAbsolutePath('resources/light/add.svg')),
     }, 'Create Deployment Configuration ...');
 
-    // TODO: fetch handler path from CodeLens
+    // TODO: fetch hardcoded handler path from CodeLens
     const handlerPath = '/Users/joe/Projects/Lambda-IDE-Integration/lambda-python/hello_world/app.py';
-    const rootUri = vscode.Uri.file('/Users/joe/Projects/Lambda-IDE-Integration/lambda-python/hello_world/app.py') || vscode.workspace.workspaceFile;
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(rootUri);
+	const handlerUri = vscode.Uri.file(handlerPath);
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(handlerUri);
     if (!workspaceFolder) {
         vscode.window.showErrorMessage(`Workspace undefined. Please open a workspace.`);
+		return undefined;
     }
+	const templates = await findCFNTemplates(workspaceFolder.uri.fsPath);
 
-    // TODO: populate dynamically => This is harder than expected. The CodeLens implementation behind identifying and especially filtering candidate handlers based on CloudFormation heuristics using file watchers is quite involved.
-    // TODO: implement Quick Deploy
+    // MAYBE: implement Quick Deploy
     // MAYBE: implement custom deployment configuration ...
-    const deploymentConfigs: QuickPickItem[] = [
+    const staticItems = [
         "template.yaml",
-        "template.yaml:HelloWorldFunction",
-        "Quick Deploy",
-        "Create Deployment Configuration ...",
-    ].map((label) => ({ label }));
+		"output/template.yaml",
+        "template.yaml:HelloWorldFunction (goal)",
+        "Quick Deploy (extension)",
+        "Create Deployment Configuration ... (manual)",
+    ];
+	const deploymentConfigs: QuickPickItem[] = templates.map((label) => ({ label }));
 
     interface State {
 		title: string;
