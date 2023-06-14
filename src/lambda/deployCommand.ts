@@ -145,12 +145,9 @@ export async function deployLambda(handlerUri: vscode.Uri | undefined, context: 
 
     // The code you place here will be executed every time your command is executed
     vscode.window.showInformationMessage(`Deploying Lambda function to LocalStack using ${state.stackName} ...`);
-    // const deployCmd = `samlocal deploy --template template.yaml --stack-name lambda-python-stack --region us-east-1 --resolve-s3 --no-confirm-changeset`
     // HACK: workaround type checking
     const deploymentConfig: any = state.deploymentConfig;
     const deployCmd = `samlocal deploy --template ${deploymentConfig.label} --stack-name ${state.stackName} --resolve-s3 --no-confirm-changeset`
-    // vscode.window.showInformationMessage(`deployCmd=${deployCmd}`);
-    // const stdout = await execShell("cd /Users/joe/Projects/Lambda-IDE-Integration/lambda-python && make deploy");
-    const stdout = await execShell(`cd /Users/joe/Projects/Lambda-IDE-Integration/lambda-python && ${deployCmd}`);
+    const stdout = await execShell(`cd ${workspaceFolder.uri.fsPath} && ${deployCmd}`);
     vscode.window.showInformationMessage(`Lambda function deployed to LocalStack.`);
 }
