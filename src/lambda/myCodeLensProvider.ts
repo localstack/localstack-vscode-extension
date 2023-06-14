@@ -17,16 +17,22 @@ class MyCodeLensProvider implements CodeLensProvider {
     const topOfDocument = new Range(0, 0, 0, 0);
 
     // Define what command we want to trigger when activating the CodeLens
-    const command: Command = {
+    const deployCommand: Command = {
       command: "localstack.deploy",
       title: "LocalStack: Deploy Lambda function",
       // TODO: add arguments with document.uri
       arguments: [document.uri]
     };
 
-    const codeLens = new CodeLens(topOfDocument, command);
+    const invokeCommand: Command = {
+      command: "localstack.invoke",
+      title: "LocalStack: Invoke Lambda function",
+    };
 
-    return [codeLens];
+    const deployCodeLens = new CodeLens(topOfDocument, deployCommand);
+    const invokeCodeLens = new CodeLens(topOfDocument, invokeCommand);
+
+    return [deployCodeLens, invokeCodeLens];
   }
 }
 
