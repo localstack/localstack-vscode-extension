@@ -1,8 +1,8 @@
 {
   "name": "localstack",
   "displayName": "LocalStack",
-  "description": "",
-  "version": "0.0.1",
+  "description": "Deploy Lambda functions to LocalStack",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.78.0"
   },
