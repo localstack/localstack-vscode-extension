@@ -1,4 +1,4 @@
-# LocalStack VSCode Extension (preview)
+# LocalStack VSCode Extension (Preview)
 
 **Deploy and invoke Lambda functions in LocalStack directly from VSCode.**
 
@@ -8,10 +8,11 @@
 
 Deploy Python Lambda function directly from your code using an [AWS SAM](https://github.com/aws/serverless-application-model) or [AWS CloudFormation](https://aws.amazon.com/cloudformation/resources/templates/) template:
 <!-- TODO: add animation gif of deployment -->
-![Deploy Lambda function](docs/deploy-lambda.png)
+<!-- TODO: update image URLs to HTTPs to work within the Marketplace -->
+![Deploy Lambda function](resources/images/deploy-lambda.png)
 
 Invoke Lambda function:
-![Invoke Lambda function](docs/invoke-lambda.png)
+![Invoke Lambda function](resources/images/invoke-lambda.png)
 
 ## Requirements
 
