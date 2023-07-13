@@ -2,7 +2,7 @@
   "name": "localstack",
   "displayName": "LocalStack",
   "description": "Deploy Lambda functions to LocalStack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "preview": true,
   "publisher": "LocalStack",
   "engines": {
@@ -14,7 +14,7 @@
   "keywords": ["LocalStack", "Lambda", "python", "AWS SAM", "CloudFormation"],
   "icon": "resources/localstack-icon-256x256.png",
   "galleryBanner": {
-    "color": "#6B7CF5",
+    "color": "#39227A",
     "theme": "dark"
   },
   "license": "Apache-2.0",

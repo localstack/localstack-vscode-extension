@@ -10,6 +10,6 @@ package:
 	vsce package
 
 publish:
-	vsce package
+	vsce publish
 
 .PHONY: install watch package publish

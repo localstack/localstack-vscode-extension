@@ -21,9 +21,14 @@
 
 ## Publish
 
-<!-- TODO: Describe publish steps after first successful publishing -->
+1. Bump version in `package.json` and run `npm install` to update `package-lock.json` as well
+2. Add changelog to `CHANGELOG.md`
+3. Package using `vsce package`
+4. Publish using `vsce publish`
 
-Follow the instructions for [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
+For more details, refer to [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
+
+<!-- TODO: automate using GitHub Action CI build https://code.visualstudio.com/api/working-with-extensions/continuous-integration -->
 
 ## Known Issues
 
