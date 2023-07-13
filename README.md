@@ -11,11 +11,10 @@
 ## Features
 
 Deploy Python Lambda function directly from your code using an [AWS SAM](https://github.com/aws/serverless-application-model) or [AWS CloudFormation](https://aws.amazon.com/cloudformation/resources/templates/) template:
-<!-- TODO: add animation gif of deployment -->
-![Deploy Lambda function](resources/images/deploy-lambda.png)
+![Deploy Lambda function](resources/images/deploy-lambda.gif)
 
 Invoke Lambda function:
-![Invoke Lambda function](resources/images/invoke-lambda.png)
+![Invoke Lambda function](resources/images/invoke-lambda.gif)
 
 ## Requirements
 
