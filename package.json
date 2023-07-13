@@ -14,7 +14,7 @@
   "keywords": ["LocalStack", "Lambda", "python", "AWS SAM", "CloudFormation"],
   "icon": "resources/localstack-icon-256x256.png",
   "galleryBanner": {
-    "color": "#6B7CF5",
+    "color": "#39227A",
     "theme": "dark"
   },
   "license": "Apache-2.0",
