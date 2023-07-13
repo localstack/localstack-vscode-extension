@@ -1,9 +1,11 @@
 # Change Log
 
-All notable changes to the "localstack" extension will be documented in this file.
+**Documents all notable changes to the LocalStack VSCode Extension.**
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## 0.1.0 (2023-07-13)
 
-## [Unreleased]
+Initial preview release.
 
-- Initial release
+- Add feature deploy Lambda to LocalStack
+- Add feature invoke Lambda in LocalStack
+- Add Python CodeLens for triggering deploy and invoke commands
