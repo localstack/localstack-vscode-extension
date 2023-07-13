@@ -2,7 +2,7 @@
   "name": "localstack",
   "displayName": "LocalStack",
   "description": "Deploy Lambda functions to LocalStack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "preview": true,
   "publisher": "LocalStack",
   "engines": {
