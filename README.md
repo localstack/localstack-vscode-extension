@@ -7,16 +7,16 @@
 ## Features
 
 Deploy Python Lambda function directly from your code using an [AWS SAM](https://github.com/aws/serverless-application-model) or [AWS CloudFormation](https://aws.amazon.com/cloudformation/resources/templates/) template:
-
-TODO: add animation gif of deployment
-<!-- [Python Lambda function deployment](docs/deploy-lambda.gif) -->
+<!-- TODO: add animation gif of deployment -->
+![Deploy Lambda function](docs/deploy-lambda.png)
 
 Invoke Lambda function:
-<!-- [Python Lambda function deployment](docs/invoke-lambda.gif) -->
+![Invoke Lambda function](docs/invoke-lambda.png)
 
 ## Requirements
 
 * [samlocal](https://github.com/localstack/aws-sam-cli-local) command line wrapper around the [AWS SAM CLI](https://github.com/aws/aws-sam-cli) for use with [LocalStack](https://github.com/localstack/localstack).
+* [LocalStack](https://docs.localstack.cloud/getting-started/) running in the background.
 
 ## Known Issues
 
@@ -24,4 +24,6 @@ None
 
 ## Feedback
 
-TODO: link to Discuss post or Slack for feedback. Create some feature requests to upvote.
+<!-- TODO: link to Discuss post or Slack for feedback. Create some feature requests to upvote. -->
+
+We are looking forward to your feedback in our Community Slack [slack.localstack.cloud](https://slack.localstack.cloud/).

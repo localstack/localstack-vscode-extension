@@ -21,9 +21,9 @@
 
 ## Publish
 
-TODO: Describe publish steps after first successful publishing
+<!-- TODO: Describe publish steps after first successful publishing -->
 
-1. ...
+Follow the instructions for [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 
 ## Known Issues
 
