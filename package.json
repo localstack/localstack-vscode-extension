@@ -3,12 +3,30 @@
   "displayName": "LocalStack",
   "description": "Deploy Lambda functions to LocalStack",
   "version": "0.1.0",
+  "preview": true,
+  "publisher": "LocalStack",
   "engines": {
     "vscode": "^1.78.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": ["LocalStack", "Lambda", "python", "AWS SAM", "CloudFormation"],
+  "icon": "resources/localstack-icon-256x256.png",
+  "galleryBanner": {
+    "color": "#6B7CF5",
+    "theme": "dark"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/localstack/localstack-vscode-extension/blob/main/README.md",
+  "bugs": {
+    "url": "https://github.com/localstack/localstack-vscode-extension/issues",
+    "email": "sean@contoso.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/localstack/localstack-vscode-extension.git"
+  },
   "activationEvents": [
     "onLanguage:python"
   ],

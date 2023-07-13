@@ -1,8 +1,10 @@
 # Change Log
 
-**Documents all notable changes to the LocalStack VSCode Extension.
+**Documents all notable changes to the LocalStack VSCode Extension.**
 
-## 0.1.0
+## 0.1.0 (2023-07-13)
+
+Initial preview release.
 
 - Add feature deploy Lambda to LocalStack
 - Add feature invoke Lambda in LocalStack
