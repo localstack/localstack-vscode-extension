@@ -1,8 +1,12 @@
 # LocalStack VSCode Extension (Preview)
 
+![Marketplace Version](https://img.shields.io/vscode-marketplace/v/LocalStack.localstack.svg)
+
 **Deploy and invoke Lambda functions in LocalStack directly from VSCode.**
 
-> We encourage you to test the current preview version and share your feedback with us.
+👉 Get our [LocalStack VSCode Extension](https://marketplace.visualstudio.com/items?itemName=LocalStack.localstack) from the Visual Studio Marketplace.
+
+> 🧪 We encourage you to test the current preview version and share your feedback with us.
 
 ## Features
 
