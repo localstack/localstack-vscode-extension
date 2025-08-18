@@ -32,10 +32,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Get a document selector for the CodeLens provider
 	// This one is any file that has the language of python
-	const docSelector = {
-		language: "python",
-		scheme: "file"
-	};
+	const docSelector = [
+		{ language: "python", scheme: "file" },
+		{ language: "javascript", scheme: "file" },
+		{ language: "typescript", scheme: "file" }
+	];
 
 	// Register our CodeLens provider
 	const codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(docSelector, new MyCodeLensProvider());
