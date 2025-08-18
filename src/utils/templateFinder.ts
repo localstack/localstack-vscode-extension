@@ -5,7 +5,7 @@ import { glob } from 'glob';
 export async function findCFNTemplates(directoryPath: string): Promise<string[]> {
     const templateCandidates = await findYamlFiles(directoryPath);
     const templates: string[] = [];
-    templateCandidates.forEach(function (candidate) {
+    templateCandidates.forEach((candidate) => {
         // TODO: validate Cfn and add valid ones to templates
         templates.push(candidate);
     }); 
