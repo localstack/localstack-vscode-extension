@@ -31,6 +31,7 @@ export async function deployLambda(handlerUri: vscode.Uri | undefined, context: 
     // MAYBE: implement custom deployment configuration ...
     const staticItems = [
         "template.yaml",
+		"../template.yaml",
 		"output/template.yaml",
         "template.yaml:HelloWorldFunction (goal)",
         "Quick Deploy (extension)",
@@ -147,7 +148,8 @@ export async function deployLambda(handlerUri: vscode.Uri | undefined, context: 
     vscode.window.showInformationMessage(`Deploying Lambda function to LocalStack using ${state.stackName} ...`);
     // HACK: workaround type checking
     const deploymentConfig: any = state.deploymentConfig;
-    const deployCmd = `samlocal deploy --template ${deploymentConfig.label} --stack-name ${state.stackName} --resolve-s3 --no-confirm-changeset`
+	const samCmd = 'AWS_ENDPOINT_URL=http://localhost:4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1 sam'
+    const deployCmd = `${samCmd} deploy --template ${deploymentConfig.label} --stack-name ${state.stackName} --resolve-s3 --no-confirm-changeset`
     const stdout = await execShell(`cd ${workspaceFolder.uri.fsPath} && ${deployCmd}`);
     vscode.window.showInformationMessage(`Lambda function deployed to LocalStack.`);
 }

@@ -2,6 +2,13 @@
 
 **Documents all notable changes to the LocalStack VSCode Extension.**
 
+## 0.2.0 (2025-08-18)
+
+- feature: Add CodeLens support for JavaScript and TypeScript Lambda functions
+- improvement: Remove requirement to use `samlocal` CLI, now uses `sam` CLI directly
+- fix: Improve SAM template detection, now handling AWS SAM sample applications
+- chore: Update all dependencies to latest versions
+
 ## 0.1.1 (2023-07-13)
 
 - Update readme with marketplace link
