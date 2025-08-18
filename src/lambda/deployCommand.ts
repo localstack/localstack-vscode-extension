@@ -31,6 +31,7 @@ export async function deployLambda(handlerUri: vscode.Uri | undefined, context: 
     // MAYBE: implement custom deployment configuration ...
     const staticItems = [
         "template.yaml",
+		"../template.yaml",
 		"output/template.yaml",
         "template.yaml:HelloWorldFunction (goal)",
         "Quick Deploy (extension)",
