@@ -1,0 +1,140 @@
+{
+	"name": "localstack",
+	"publisher": "localstack",
+	"displayName": "LocalStack Toolkit for VS Code",
+	"description": "LocalStack - Run locally, deploy globally!",
+	"version": "1.0.0",
+	"engines": {
+		"node": ">=20",
+		"vscode": "^1.83.0"
+	},
+	"categories": [
+		"Testing",
+		"Other"
+	],
+	"galleryBanner": {
+		"color": "#39227A",
+		"theme": "dark"
+	},
+	"icon": "resources/icons/localstack-icon-256x256.png",
+	"license": "Apache-2.0",
+	"homepage": "https://github.com/localstack/localstack-vscode-extension/blob/main/README.md",
+	"bugs": {
+		"url": "https://github.com/localstack/localstack-vscode-extension/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/localstack/localstack-vscode-extension.git"
+	},
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"title": "LocalStack",
+			"properties": {
+				"localstack.cli.location": {
+					"type": "string",
+					"default": "",
+					"markdownDescription": "Location of LocalStack CLI."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "localstack.setup",
+				"title": "Run Setup Wizard",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.refreshStatusBar",
+				"title": "Refresh Status Bar",
+				"category": "LocalStack",
+				"enablement": "false"
+			},
+			{
+				"command": "localstack.showCommands",
+				"title": "Show Commands",
+				"category": "LocalStack",
+				"enablement": "false"
+			},
+			{
+				"command": "localstack.viewLogs",
+				"title": "View Logs",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.start",
+				"title": "Start LocalStack",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.stop",
+				"title": "Stop LocalStack",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.authenticate",
+				"title": "Authenticate",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.openLicensePage",
+				"title": "Open license page",
+				"category": "LocalStack"
+			},
+			{
+				"command": "localstack.configureAwsProfiles",
+				"title": "Configure \"localstack\" AWS Profiles",
+				"category": "LocalStack"
+			}
+		],
+		"icons": {
+			"localstack-logo": {
+				"description": "LocalStack logo",
+				"default": {
+					"fontPath": "resources/fonts/localstack.woff",
+					"fontCharacter": "\\e000"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "node --env-file=.env.local --env-file-if-exists=.env build/extension.mjs",
+		"watch": "npm-run-all -p watch:esbuild watch:localstack-web-mock-server",
+		"watch:esbuild": "node --watch --env-file=.env.local --env-file-if-exists=.env build/extension.mjs --watch",
+		"watch:tsc": "tsc --watch",
+		"watch:localstack-web-mock-server": "node --watch --env-file=.env.local --env-file-if-exists=.env build/localstack-web-mock-server.mjs",
+		"package": "node build/extension.mjs --production",
+		"pretest": "npm run compile",
+		"check-types": "tsc",
+		"lint": "eslint .",
+		"test": "vscode-test",
+		"compile:font": "node build/icon-font.mjs"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.1.1",
+		"@eslint/compat": "^1.3.1",
+		"@eslint/js": "^9.30.1",
+		"@types/fs-extra": "^11.0.4",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "20.x",
+		"@types/vscode": "^1.83.0",
+		"@vscode/test-cli": "^0.0.10",
+		"@vscode/test-electron": "^2.5.2",
+		"@vscode/vsce": "^3.6.0",
+		"esbuild": "^0.25.6",
+		"eslint": "^9.30.1",
+		"eslint-plugin-import": "^2.32.0",
+		"fs-extra": "^11.3.0",
+		"npm-run-all": "^4.1.5",
+		"p-min-delay": "^4.1.0",
+		"typescript": "^5.8.3",
+		"typescript-eslint": "^8.36.0",
+		"uuid": "^11.1.0",
+		"webfont": "^11.2.26",
+		"zod": "^4.0.5"
+	}
+}
