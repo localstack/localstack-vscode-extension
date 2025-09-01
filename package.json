@@ -12,6 +12,11 @@
 		"Testing",
 		"Other"
 	],
+	"keywords": [
+		"LocalStack",
+		"Amazon",
+		"AWS"
+	],
 	"galleryBanner": {
 		"color": "#39227A",
 		"theme": "dark"
