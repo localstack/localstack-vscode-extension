@@ -1,4 +1,4 @@
-.PHONY: vsix
+.PHONY: vsix publish
 
 vsix:
 	@echo "Packaging VS Code extension into VSIX file..."
