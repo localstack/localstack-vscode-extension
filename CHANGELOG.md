@@ -7,7 +7,7 @@ This release adds features to setup and manage LocalStack from within VS Code. F
 - feature: Add LocalStack installation and configuration setup wizard
 - feature: Add LocalStack status bar indicator
 - feature: Add `Start` and `Stop` LocalStack commands
-- feature: Remove deploy and invoke Lambda features
+- breaking change: Remove deploy and invoke Lambda features
 
 ## 0.2.0 (2025-08-18)
 
