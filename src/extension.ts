@@ -1,49 +1,67 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import { StatusBarAlignment, window } from "vscode";
+import type { ExtensionContext } from "vscode";
 
-import { showInformationMessage } from './lambda/infoCommand';
-import { deployLambda } from './lambda/deployCommand';
-import { invokeLambda } from './lambda/invokeCommand';
-import MyCodeLensProvider from './lambda/myCodeLensProvider';
+import authenticate from "./plugins/authenticate.ts";
+import configureAws from "./plugins/configure-aws.ts";
+import logs from "./plugins/logs.ts";
+import manage from "./plugins/manage.ts";
+import setup from "./plugins/setup.ts";
+import statusBar from "./plugins/status-bar.ts";
+import { PluginManager } from "./plugins.ts";
+import { createContainerStatusTracker } from "./utils/container-status.ts";
+import { createLocalStackStatusTracker } from "./utils/localstack-status.ts";
+import { getOrCreateExtensionSessionId } from "./utils/manage.ts";
+import { createSetupStatusTracker } from "./utils/setup-status.ts";
+import { createTelemetry } from "./utils/telemetry.ts";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+const plugins = new PluginManager([
+	setup,
+	authenticate,
+	configureAws,
+	manage,
+	statusBar,
+	logs,
+]);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "localstack" is now active!');
+export async function activate(context: ExtensionContext) {
+	const outputChannel = window.createOutputChannel("LocalStack", {
+		log: true,
+	});
+	context.subscriptions.push(outputChannel);
 
-	context.subscriptions.push(
-		// The command has been defined in the package.json file
-		// Now provide the implementation of the command with registerCommand
-		// The commandId parameter must match the command field in package.json
-		vscode.commands.registerCommand('localstack.info', async () => {
-			await showInformationMessage();
-		}),
-		vscode.commands.registerCommand('localstack.deploy', async (handlerUri: vscode.Uri | undefined) => {
-			await deployLambda(handlerUri, context);
-		}),
-		vscode.commands.registerCommand('localstack.invoke', async () => {
-			await invokeLambda();
-		}),
+	const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, -1);
+	context.subscriptions.push(statusBarItem);
+	statusBarItem.text = "$(loading~spin) LocalStack";
+	statusBarItem.show();
+
+	const containerStatusTracker = await createContainerStatusTracker(
+		"localstack-main",
+		outputChannel,
 	);
+	context.subscriptions.push(containerStatusTracker);
 
-	// Get a document selector for the CodeLens provider
-	// This one is any file that has the language of python
-	const docSelector = [
-		{ language: "python", scheme: "file" },
-		{ language: "javascript", scheme: "file" },
-		{ language: "typescript", scheme: "file" }
-	];
+	const localStackStatusTracker = await createLocalStackStatusTracker(
+		containerStatusTracker,
+		outputChannel,
+	);
+	context.subscriptions.push(localStackStatusTracker);
 
-	// Register our CodeLens provider
-	const codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(docSelector, new MyCodeLensProvider());
+	const setupStatusTracker = await createSetupStatusTracker(outputChannel);
 
-	// Push the command and CodeLens provider to the context so it can be disposed of later
-	context.subscriptions.push(codeLensProviderDisposable);
+	const sessionId = await getOrCreateExtensionSessionId(context);
+	const telemetry = createTelemetry(outputChannel, sessionId);
+
+	await plugins.activate({
+		context,
+		outputChannel,
+		statusBarItem,
+		containerStatusTracker,
+		localStackStatusTracker,
+		setupStatusTracker,
+		telemetry,
+	});
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export async function deactivate() {
+	await plugins.deactivate();
+}

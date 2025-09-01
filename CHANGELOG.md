@@ -1,6 +1,13 @@
-# Change Log
+# Changelog
 
-**Documents all notable changes to the LocalStack VSCode Extension.**
+## 1.0.0 (2025-09-01)
+
+This release adds features to setup and manage LocalStack from within VS Code. Features from initial preview release have been removed.
+
+- feature: Add LocalStack installation and configuration setup wizard
+- feature: Add LocalStack status bar indicator
+- feature: Add `Start` and `Stop` LocalStack commands
+- breaking change: Remove deploy and invoke Lambda features
 
 ## 0.2.0 (2025-08-18)
 
@@ -11,8 +18,8 @@
 
 ## 0.1.1 (2023-07-13)
 
-- Update readme with marketplace link
-- Add animated gifs for features
+- Update README with marketplace link
+- Add animated GIFs for features
 
 ## 0.1.0 (2023-07-13)
 

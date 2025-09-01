@@ -1,31 +1,41 @@
-# LocalStack VSCode Extension (Preview)
+# LocalStack Toolkit for VS Code
 
-![Marketplace Version](https://img.shields.io/vscode-marketplace/v/LocalStack.localstack.svg)
+The LocalStack Toolkit for VS Code enables you to install, configure, and run LocalStack without leaving VS Code.
 
-**Deploy and invoke Lambda functions in LocalStack directly from VSCode.**
+## Install and configure LocalStack
 
-👉 Get our [LocalStack VSCode Extension](https://marketplace.visualstudio.com/items?itemName=LocalStack.localstack) from the Visual Studio Marketplace.
+The setup wizard ensures LocalStack is installed and configured for a seamless integration with AWS tools, like AWS CLI, SDKs, CDK.
 
-> 🧪 We encourage you to test the current preview version and share your feedback with us.
+LocalStack can be installed either locally for the current user or globally for all users.
 
-## Features
+You can start using LocalStack for free by signing up for a free account or signing into an existing one. The setup wizard facilitates this process and configures your authentication token required to start LocalStack.
 
-Deploy Python Lambda function directly from your code using an [AWS SAM](https://github.com/aws/serverless-application-model) or [AWS CloudFormation](https://aws.amazon.com/cloudformation/resources/templates/) template:
-![Deploy Lambda function](resources/images/deploy-lambda.gif)
+The LocalStack Toolkit integrates seamlessly with AWS tools like the AWS CLI. It automatically configures a dedicated `localstack` AWS profile in your `.aws/config` and `.aws/credentials` files, if one is not already present.
 
-Invoke Lambda function:
-![Invoke Lambda function](resources/images/invoke-lambda.gif)
+![Run the LocalStack Setup Wizard](docs/images/localstack-toolkit-setup-wizard.gif)
 
-## Requirements
+## Run LocalStack
 
-* [LocalStack](https://docs.localstack.cloud/getting-started/) running in the background.
+The LocalStack button in the VS Code status bar provides an instant view of LocalStack's runtime status, such as `stopped` or `running`.
 
-## Known Issues
+The status bar button provides access to `Start` and `Stop` LocalStack commands. The status button turns red if LocalStack is not found or misconfigured.
 
-* Limitations
-  * The CodeLens for "Deploy Lambda function" always appears at the first line of each Python file
-  * "Invoke Lambda function" currently only works in the region `us-east-1` and with an empty payload.
+## Viewing LocalStack logs
 
-## Feedback
+You can see LocalStack logs in the VS Code Output panel. Simply select LocalStack from the drop-down menu.
 
-We are looking forward to your feedback in our Community Slack [slack.localstack.cloud](https://slack.localstack.cloud/).
+## `localstack` AWS profile
+
+Once the profile is configured you can use it from your favorite AWS tools like AWS CLI, SDKs, CDK to deploy to and interact with LocalStack.
+
+## Changelog
+
+[Read our full changelog](./CHANGELOG.md) to learn about the latest changes in each release.
+
+## Contributing
+
+[Read our contributing guidelines](./CONTRIBUTING.md) to learn how you can help.
+
+## Support
+
+If you need help, [please read our support guidelines](./SUPPORT.md) for information on how to get in touch.

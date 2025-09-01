@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format
+        run: npx biome ci .
+
+      - name: Lint
+        run: npx eslint
+
+      - name: Type check
+        run: npx tsc
+
+      - name: Compile
+        run: npx vsce package
+        env:
+          LOCALSTACK_WEB_AUTH_REDIRECT: https://app.localstack.cloud/redirect?name=VSCode
+          NODE_ENV: ci
+      
+      - name: Test
+        run: xvfb-run -a npx vscode-test
