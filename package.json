@@ -1,9 +1,10 @@
 {
 	"name": "localstack",
-	"publisher": "localstack",
+	"publisher": "LocalStack",
 	"displayName": "LocalStack Toolkit for VS Code",
 	"description": "LocalStack - Run locally, deploy globally!",
 	"version": "1.0.0",
+	"preview": true,
 	"engines": {
 		"node": ">=20",
 		"vscode": "^1.83.0"
