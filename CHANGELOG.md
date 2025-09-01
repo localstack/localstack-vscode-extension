@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 (2025-09-01)
+
+Updates Extension Marketplace assets, no functionality has been changed.
+
+- fix: Use shorter extension display name
+- fix: Update homepage link
+
 ## 1.0.0 (2025-09-01)
 
 This release adds features to setup and manage LocalStack from within VS Code. Features from initial preview release have been removed.
