@@ -2,10 +2,8 @@
 
 ## 1.0.1 (2025-09-01)
 
-Updates Extension Marketplace assets, no functionality has been changed.
-
-- fix: Use shorter extension display name
-- fix: Update homepage link
+- fix: Fix browser redirect in Localstack authentication
+- fix: Update Extension Marketplace assets
 
 ## 1.0.0 (2025-09-01)
 
