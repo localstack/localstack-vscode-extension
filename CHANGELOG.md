@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 (2025-09-01)
+
+- fix: Fix browser redirect in Localstack authentication
+- fix: Update Extension Marketplace assets
+
 ## 1.0.0 (2025-09-01)
 
 This release adds features to setup and manage LocalStack from within VS Code. Features from initial preview release have been removed.
