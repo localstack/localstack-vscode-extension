@@ -24,7 +24,7 @@
 	},
 	"icon": "resources/icons/localstack-icon-256x256.png",
 	"license": "Apache-2.0",
-	"homepage": "https://github.com/localstack/localstack-vscode-extension",
+	"homepage": "https://github.com/localstack/localstack-vscode-extension#readme",
 	"bugs": {
 		"url": "https://github.com/localstack/localstack-vscode-extension/issues"
 	},
