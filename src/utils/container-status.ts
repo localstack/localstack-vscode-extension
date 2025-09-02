@@ -1,6 +1,7 @@
 import { exec, spawn } from "node:child_process";
 
 import type { Disposable, LogOutputChannel } from "vscode";
+import * as z from "zod/v4-mini";
 
 import { createEmitter } from "./emitter.ts";
 
@@ -53,6 +54,23 @@ export async function createContainerStatusTracker(
 	};
 }
 
+const DockerEventsSchema = z.object({
+	Action: z.enum(["start", "kill", "die"]),
+	Actor: z.object({
+		Attributes: z.object({
+			name: z.string(),
+		}),
+	}),
+});
+
+function safeJsonParse(text: string): unknown {
+	try {
+		return JSON.parse(text);
+	} catch {
+		return undefined;
+	}
+}
+
 function listenToContainerStatus(
 	containerName: string,
 	outputChannel: LogOutputChannel,
@@ -72,8 +90,14 @@ function listenToContainerStatus(
 				"events",
 				"--filter",
 				`container=${containerName}`,
+				"--filter",
+				"event=start",
+				"--filter",
+				"event=kill",
+				"--filter",
+				"event=die",
 				"--format",
-				"{{.Status}}",
+				"json",
 			]);
 
 			dockerEvents.on("error", (error) => {
@@ -108,8 +132,18 @@ function listenToContainerStatus(
 
 			dockerEvents.stdout.on("data", (data: Buffer) => {
 				const lines = data.toString().split("\n").filter(Boolean);
-				for (const status of lines) {
-					switch (status) {
+				for (const line of lines) {
+					const json = safeJsonParse(line);
+					const parsed = DockerEventsSchema.safeParse(json);
+					if (!parsed.success) {
+						continue;
+					}
+
+					if (parsed.data.Actor.Attributes.name !== containerName) {
+						continue;
+					}
+
+					switch (parsed.data.Action) {
 						case "start":
 							onStatusChange("running");
 							break;
