@@ -203,7 +203,6 @@ async function getContainerStatus(
 					resolve("stopped");
 				} else {
 					switch (stdout.trim()) {
-						case "created":
 						case "restarting":
 						case "running":
 							resolve("running");
