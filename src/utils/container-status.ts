@@ -130,9 +130,16 @@ function listenToContainerStatus(
 				throw new Error("Failed to get stdout from docker events process");
 			}
 
+			let buffer = "";
 			dockerEvents.stdout.on("data", (data: Buffer) => {
-				const lines = data.toString().split("\n").filter(Boolean);
-				for (const line of lines) {
+				buffer += data.toString();
+
+				// Process all complete lines
+				let newlineIndex = buffer.indexOf("\n");
+				while (newlineIndex !== -1) {
+					const line = buffer.substring(0, newlineIndex).trim();
+					buffer = buffer.substring(newlineIndex + 1);
+
 					const json = safeJsonParse(line);
 					const parsed = DockerEventsSchema.safeParse(json);
 					if (!parsed.success) {
@@ -154,6 +161,8 @@ function listenToContainerStatus(
 							onStatusChange("stopped");
 							break;
 					}
+
+					newlineIndex = buffer.indexOf("\n");
 				}
 			});
 		} catch (error) {
