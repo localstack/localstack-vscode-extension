@@ -1,0 +1,96 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "watch",
+			"dependsOn": [
+				"npm: watch:localstack-web-mock-server",
+				"npm: watch:esbuild"
+			],
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "npm",
+			"script": "watch:esbuild",
+			"group": "build",
+			"problemMatcher": {
+				"severity": "error",
+				"applyTo": "closedDocuments",
+				"source": "esbuild",
+				"fileLocation": "relative",
+				"pattern": [
+					{
+						"regexp": "^[✘▲] \\[([A-Z]+)\\] (.+)",
+						"severity": 1,
+						"message": 2
+					},
+					{
+						"regexp": "^(?:\\t| {4})(?!\\s)([^:]+)(?::([0-9]+))?(?::([0-9]+))?:$",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": {
+						"regexp": "\\[watch\\] build started"
+					},
+					"endsPattern": {
+						"regexp": "\\[watch\\] build finished"
+					}
+				}
+			},
+			"isBackground": true,
+			"label": "npm: watch:esbuild",
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			}
+		},
+		{
+			"type": "npm",
+			"script": "watch:localstack-web-mock-server",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": {
+				"severity": "error",
+				"applyTo": "closedDocuments",
+				"fileLocation": "relative",
+				"pattern": [
+					{
+						"regexp": "^[✘▲] \\[([A-Z]+)\\] (.+)",
+						"severity": 1,
+						"message": 2
+					},
+					{
+						"regexp": "^(?:\\t| {4})(?!\\s)([^:]+)(?::([0-9]+))?(?::([0-9]+))?:$",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": {
+						"regexp": "Server starting"
+					},
+					"endsPattern": {
+						"regexp": "Server started"
+					}
+				}
+			},
+			"label": "npm: watch:localstack-web-mock-server",
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			}
+		}
+	]
+}
