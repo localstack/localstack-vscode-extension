@@ -2,7 +2,7 @@
 
 ## 1.0.2 (2025-09-02)
 
-- fix: Improve localstack status tracker reporting [#7](https://github.com/localstack/localstack-vscode-extension/pull/7)
+- fix: Improve LocalStack status tracker reporting [#7](https://github.com/localstack/localstack-vscode-extension/pull/7)
 
 ## 1.0.1 (2025-09-01)
 
