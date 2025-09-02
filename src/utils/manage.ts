@@ -43,9 +43,9 @@ async function getStatusFromCLI(): Promise<LocalstackStatus | undefined> {
 		const result = await exec(
 			"docker inspect -f '{{.State.Status}}' localstack-main",
 		);
-		if (/running/i.test(result.stdout)) {
+		if (result.stdout.includes("running")) {
 			return "running";
-		} else if (/stopped/i.test(result.stdout)) {
+		} else if (result.stdout.includes("stopped")) {
 			return "stopped";
 		}
 	} catch {
