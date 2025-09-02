@@ -60,6 +60,7 @@ async function redirectToLocalStack() {
 	);
 	const redirectSearchParams = new URLSearchParams(redirectUri.query);
 
+	// TODO: Gather environment variables in a safer way - e.g. during extension activation
 	// biome-ignore lint/style/noNonNullAssertion: false positive
 	const url = new URL(process.env.LOCALSTACK_WEB_AUTH_REDIRECT!);
 	url.searchParams.set("windowId", redirectSearchParams.get("windowId") ?? "");
