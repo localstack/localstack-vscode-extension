@@ -167,12 +167,9 @@ export function createTelemetry(
 
 			postEvent(extensionVersion, telemetryEvent).catch(() => {});
 
-			if (process.env.NODE_ENV === "development") {
-				// only log in output channel for development mode
-				outputChannel.info(
-					`Telemetry event tracked: ${JSON.stringify(telemetryEvent)}`,
-				);
-			}
+			outputChannel.trace(
+				`[telemetry.event]: ${JSON.stringify(telemetryEvent)}`,
+			);
 		},
 	};
 }
