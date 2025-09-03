@@ -4,6 +4,7 @@ import type { Disposable, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
 import { createEmitter } from "./emitter.ts";
+import { createJsonlStream } from "./jsonl-stream.ts";
 
 export type ContainerStatus = "running" | "stopping" | "stopped";
 
@@ -62,14 +63,6 @@ const DockerEventsSchema = z.object({
 		}),
 	}),
 });
-
-function safeJsonParse(text: string): unknown {
-	try {
-		return JSON.parse(text);
-	} catch {
-		return undefined;
-	}
-}
 
 function listenToContainerStatus(
 	containerName: string,
@@ -130,40 +123,32 @@ function listenToContainerStatus(
 				throw new Error("Failed to get stdout from docker events process");
 			}
 
-			let buffer = "";
-			dockerEvents.stdout.on("data", (data: Buffer) => {
-				buffer += data.toString();
-
-				// Process all complete lines
-				let newlineIndex = buffer.indexOf("\n");
-				while (newlineIndex !== -1) {
-					const line = buffer.substring(0, newlineIndex).trim();
-					buffer = buffer.substring(newlineIndex + 1);
-
-					const json = safeJsonParse(line);
-					const parsed = DockerEventsSchema.safeParse(json);
-					if (!parsed.success) {
-						continue;
-					}
-
-					if (parsed.data.Actor.Attributes.name !== containerName) {
-						continue;
-					}
-
-					switch (parsed.data.Action) {
-						case "start":
-							onStatusChange("running");
-							break;
-						case "kill":
-							onStatusChange("stopping");
-							break;
-						case "die":
-							onStatusChange("stopped");
-							break;
-					}
-
-					newlineIndex = buffer.indexOf("\n");
+			const jsonlStream = createJsonlStream(outputChannel);
+			jsonlStream.on((json) => {
+				const parsed = DockerEventsSchema.safeParse(json);
+				if (!parsed.success) {
+					return;
 				}
+
+				if (parsed.data.Actor.Attributes.name !== containerName) {
+					return;
+				}
+
+				switch (parsed.data.Action) {
+					case "start":
+						onStatusChange("running");
+						break;
+					case "kill":
+						onStatusChange("stopping");
+						break;
+					case "die":
+						onStatusChange("stopped");
+						break;
+				}
+			});
+
+			dockerEvents.stdout.on("data", (data: Buffer) => {
+				jsonlStream.write(data);
 			});
 		} catch (error) {
 			// If we can't spawn the process, try again after a delay
