@@ -1,8 +1,5 @@
 import * as assert from "node:assert";
 
-import { LogLevel } from "vscode";
-import type { LogOutputChannel, Event } from "vscode";
-
 import { JsonlStream } from "../utils/jsonl-stream.js";
 
 const setup = () => {
