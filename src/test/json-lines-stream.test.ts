@@ -17,7 +17,7 @@ const setup = () => {
 };
 
 suite("JsonLinesStream Test Suite", () => {
-	test("should parse and emit complete JsonLines messages", () => {
+	test("should parse and emit complete JSON lines messages", () => {
 		const { stream, callbackCalls } = setup();
 
 		// Test with multiple JSON objects in a single write
@@ -30,7 +30,7 @@ suite("JsonLinesStream Test Suite", () => {
 		assert.deepStrictEqual(callbackCalls[1], { key2: "value2" });
 	});
 
-	test("should handle incomplete JsonLines messages across multiple writes", () => {
+	test("should handle incomplete JSON lines messages across multiple writes", () => {
 		const { stream, callbackCalls } = setup();
 
 		// First write with partial message
