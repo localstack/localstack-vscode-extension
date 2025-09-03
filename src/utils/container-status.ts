@@ -4,6 +4,7 @@ import type { Disposable, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
 import { createEmitter } from "./emitter.ts";
+import { JsonLinesStream } from "./json-lines-stream.ts";
 
 export type ContainerStatus = "running" | "stopping" | "stopped";
 
@@ -64,14 +65,6 @@ const DockerEventsSchema = z.object({
 	}),
 });
 
-function safeJsonParse(text: string): unknown {
-	try {
-		return JSON.parse(text);
-	} catch {
-		return undefined;
-	}
-}
-
 function listenToContainerStatus(
 	containerName: string,
 	outputChannel: LogOutputChannel,
@@ -131,32 +124,33 @@ function listenToContainerStatus(
 				throw new Error("Failed to get stdout from docker events process");
 			}
 
-			dockerEvents.stdout.on("data", (data: Buffer) => {
-				const lines = data.toString().split("\n").filter(Boolean);
-				for (const line of lines) {
-					const json = safeJsonParse(line);
-					const parsed = DockerEventsSchema.safeParse(json);
-					if (!parsed.success) {
-						continue;
-					}
+			const jsonlStream = new JsonLinesStream();
+			jsonlStream.onJson((json) => {
+				const parsed = DockerEventsSchema.safeParse(json);
+				if (!parsed.success) {
+					return;
+				}
 
-					if (parsed.data.Actor.Attributes.name !== containerName) {
-						continue;
-					}
+				if (parsed.data.Actor.Attributes.name !== containerName) {
+					return;
+				}
 
-					switch (parsed.data.Action) {
-						case "start":
-							onStatusChange("running");
-							break;
-						case "kill":
-							onStatusChange("stopping");
-							break;
-						case "die":
-							onStatusChange("stopped");
-							break;
-					}
+				outputChannel.debug(`[container.status]: ${parsed.data.Action}`);
+
+				switch (parsed.data.Action) {
+					case "start":
+						onStatusChange("running");
+						break;
+					case "kill":
+						onStatusChange("stopping");
+						break;
+					case "die":
+						onStatusChange("stopped");
+						break;
 				}
 			});
+
+			dockerEvents.stdout.pipe(jsonlStream);
 		} catch (error) {
 			// If we can't spawn the process, try again after a delay
 			scheduleRestart();
