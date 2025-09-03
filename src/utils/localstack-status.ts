@@ -50,6 +50,7 @@ export async function createLocalStackStatusTracker(
 
 	return {
 		status() {
+			// biome-ignore lint/style/noNonNullAssertion: false positive
 			return status!;
 		},
 		onChange(callback) {
