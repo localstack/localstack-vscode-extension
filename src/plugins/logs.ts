@@ -19,7 +19,7 @@ export default createPlugin(
 					stdio: "pipe",
 				},
 			);
-			pipeToLogOutputChannel(logsProcess, outputChannel, "");
+			pipeToLogOutputChannel(logsProcess, outputChannel, "[localstack.logs]: ");
 		};
 
 		const stopLogging = () => {
