@@ -81,7 +81,7 @@ function getLocalStackStatus(
 	}
 }
 
-async function fetchHealth(outputChannel: LogOutputChannel): Promise<boolean> {
+async function fetchHealth(): Promise<boolean> {
 	// Abort the fetch if it takes more than 500ms.
 	const controller = new AbortController();
 	setTimeout(() => controller.abort(), 500);
