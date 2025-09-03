@@ -30,7 +30,7 @@ export class JsonlStream extends Writable {
 					buffer = buffer.substring(newlineIndex + 1);
 
 					const json = safeJsonParse(line);
-					if (json !== null) {
+					if (json !== undefined) {
 						this.emit("json", json);
 					}
 
