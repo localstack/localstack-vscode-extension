@@ -5,6 +5,7 @@ import { commands, ProgressLocation, window } from "vscode";
 import { createPlugin } from "../plugins.ts";
 import {
 	checkIsAuthenticated,
+	checkIsLicenseValid,
 	requestAuthentication,
 	saveAuthToken,
 } from "../utils/authenticate.ts";
@@ -121,8 +122,6 @@ export default createPlugin(
 								progress.report({
 									message:
 										"Waiting for authentication response from the browser...",
-									// message: "Waiting for browser response...",
-									// message: "Waiting for authentication response...",
 								});
 								const { authToken } = await minDelay(
 									requestAuthentication(context, cancellationToken),
@@ -145,7 +144,6 @@ export default createPlugin(
 
 								/////////////////////////////////////////////////////////////////////
 								progress.report({
-									// message: "Authenticating...",
 									message: "Authenticating to file...",
 								});
 								await minDelay(saveAuthToken(authToken, outputChannel));
@@ -165,6 +163,21 @@ export default createPlugin(
 
 									return;
 								}
+							}
+
+							/////////////////////////////////////////////////////////////////////
+							progress.report({ message: "Checking LocalStack license..." });
+							const licenseIsValid = await minDelay(
+								checkIsLicenseValid(outputChannel),
+							);
+							if (licenseIsValid) {
+								progress.report({ message: "License verified succesfully..." });
+							} else {
+								progress.report({
+									message:
+										"License is not valid or not assigned, please check License settings page...",
+								});
+								commands.executeCommand("localstack.openLicensePage");
 							}
 
 							/////////////////////////////////////////////////////////////////////
