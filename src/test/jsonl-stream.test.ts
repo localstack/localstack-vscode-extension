@@ -9,10 +9,9 @@ const setup = () => {
 	const jsonlStream = new JsonlStream();
 
 	const callbackCalls: unknown[] = [];
-	const callback = (data: unknown) => {
+	jsonlStream.onJson((data: unknown) => {
 		callbackCalls.push(data);
-	};
-	jsonlStream.onJson(callback);
+	});
 
 	return {
 		jsonlStream,
