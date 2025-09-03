@@ -167,7 +167,7 @@ export function createTelemetry(
 
 			postEvent(extensionVersion, telemetryEvent).catch(() => {});
 
-			outputChannel.debug(
+			outputChannel.trace(
 				`[telemetry.event]: ${JSON.stringify(telemetryEvent)}`,
 			);
 		},
