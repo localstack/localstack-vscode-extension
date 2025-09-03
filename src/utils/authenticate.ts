@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -125,7 +124,7 @@ export async function checkIsLicenseValid(outputChannel: LogOutputChannel) {
 	} catch (error) {
 		outputChannel.error(error instanceof Error ? error : String(error));
 
-		return undefined;
+		return false;
 	}
 }
 
