@@ -79,7 +79,7 @@ export default createPlugin(
 		);
 
 		context.subscriptions.push(
-			commands.registerCommand("localstack.refreshStatusBar", async () => {
+			commands.registerCommand("localstack.refreshStatusBar", () => {
 				const setupStatus = setupStatusTracker.status();
 
 				if (setupStatus === "setup_required") {
