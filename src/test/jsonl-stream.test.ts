@@ -3,34 +3,16 @@ import * as assert from "node:assert";
 import { LogLevel } from "vscode";
 import type { LogOutputChannel, Event } from "vscode";
 
-import { createJsonlStream } from "../utils/jsonl-stream.js";
+import { JsonlStream } from "../utils/jsonl-stream.js";
 
 const setup = () => {
-	const mockOutputChannel: LogOutputChannel = {
-		name: "test",
-		logLevel: LogLevel.Info,
-		onDidChangeLogLevel: {} as Event<LogLevel>,
-		append: () => {},
-		appendLine: () => {},
-		replace: () => {},
-		clear: () => {},
-		show: () => {},
-		hide: () => {},
-		dispose: () => {},
-		trace: () => {},
-		debug: () => {},
-		info: () => {},
-		warn: () => {},
-		error: () => {},
-	};
-
-	const jsonlStream = createJsonlStream(mockOutputChannel);
+	const jsonlStream = new JsonlStream();
 
 	const callbackCalls: unknown[] = [];
 	const callback = (data: unknown) => {
 		callbackCalls.push(data);
 	};
-	jsonlStream.on(callback);
+	jsonlStream.onJson(callback);
 
 	return {
 		jsonlStream,

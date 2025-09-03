@@ -4,7 +4,7 @@ import type { Disposable, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
 import { createEmitter } from "./emitter.ts";
-import { createJsonlStream } from "./jsonl-stream.ts";
+import { JsonlStream } from "./jsonl-stream.ts";
 
 export type ContainerStatus = "running" | "stopping" | "stopped";
 
@@ -123,8 +123,8 @@ function listenToContainerStatus(
 				throw new Error("Failed to get stdout from docker events process");
 			}
 
-			const jsonlStream = createJsonlStream(outputChannel);
-			jsonlStream.on((json) => {
+			const jsonlStream = new JsonlStream();
+			jsonlStream.onJson((json) => {
 				const parsed = DockerEventsSchema.safeParse(json);
 				if (!parsed.success) {
 					return;
@@ -133,6 +133,8 @@ function listenToContainerStatus(
 				if (parsed.data.Actor.Attributes.name !== containerName) {
 					return;
 				}
+
+				outputChannel.debug(`[container.status]: ${parsed.data.Action}`);
 
 				switch (parsed.data.Action) {
 					case "start":
@@ -147,9 +149,7 @@ function listenToContainerStatus(
 				}
 			});
 
-			dockerEvents.stdout.on("data", (data: Buffer) => {
-				jsonlStream.write(data);
-			});
+			dockerEvents.stdout.pipe(jsonlStream);
 		} catch (error) {
 			// If we can't spawn the process, try again after a delay
 			scheduleRestart();

@@ -1,44 +1,52 @@
-import type { LogOutputChannel } from "vscode";
+import { Writable } from "node:stream";
 
-import type { Callback } from "./emitter.ts";
-import { createEmitter } from "./emitter.ts";
-
-interface JsonlStream {
-  write(data: Buffer): void;
-  on(callback: Callback<unknown>): void;
-}
-
-function safeJsonParse(text: string): unknown {
+/**
+ * Safely parses a JSON string, returning null if parsing fails.
+ * @param str - The JSON string to parse.
+ * @returns The parsed object or null if invalid.
+ */
+export function safeJsonParse(str: string): unknown {
 	try {
-		return JSON.parse(text);
+		return JSON.parse(str);
 	} catch {
 		return undefined;
 	}
 }
 
-export const createJsonlStream = (outputChannel: LogOutputChannel): JsonlStream => {
-  const emitter = createEmitter(outputChannel)
-  let buffer = "";
-  return {
-    write(data) {
-      buffer += data.toString();
+/**
+ * Writable stream that buffers data until a newline,
+ * parses each line as JSON, and emits the parsed object.
+ */
+export class JsonlStream extends Writable {
+	constructor() {
+		let buffer = "";
+		super({
+			write: (chunk, _encoding, callback) => {
+				buffer += String(chunk);
 
-				// Process all complete lines
 				let newlineIndex = buffer.indexOf("\n");
 				while (newlineIndex !== -1) {
 					const line = buffer.substring(0, newlineIndex).trim();
 					buffer = buffer.substring(newlineIndex + 1);
 
 					const json = safeJsonParse(line);
-          if (json) {
-            void emitter.emit(json)
-          }
+					if (json !== null) {
+						this.emit("json", json);
+					}
 
 					newlineIndex = buffer.indexOf("\n");
 				}
-    },
-    on(callback) {
-      emitter.on(callback)
-    },
-  }
-};
+
+				callback();
+			},
+		});
+	}
+
+	/**
+	 * Registers a listener for parsed JSON objects.
+	 * @param listener - Function called with each parsed object.
+	 */
+	onJson(callback: (json: unknown) => void) {
+		this.on("json", callback);
+	}
+}
