@@ -1,9 +1,9 @@
 import { Writable } from "node:stream";
 
 /**
- * Safely parses a JSON string, returning null if parsing fails.
+ * Safely parses a JSON string, returning undefined if parsing fails.
  * @param str - The JSON string to parse.
- * @returns The parsed object or null if invalid.
+ * @returns The parsed object or undefined if invalid.
  */
 export function safeJsonParse(str: string): unknown {
 	try {
@@ -17,7 +17,7 @@ export function safeJsonParse(str: string): unknown {
  * Writable stream that buffers data until a newline,
  * parses each line as JSON, and emits the parsed object.
  */
-export class JsonlStream extends Writable {
+export class JsonLinesStream extends Writable {
 	constructor() {
 		let buffer = "";
 		super({
