@@ -3,8 +3,9 @@
 ## 1.1.0 (2025-09-04)
 
 - feat: Add LocalStack license activation step to the setup wizard
-- fix: Various correctness and speed improvements to LocalStack status tracker reporting
+- fix: Add various correctness and speed improvements to LocalStack status tracker reporting
 - fix: Prevent starting LocalStack if it is already running or stopping when it is not running
+- chore: Add profiling traces to the output channel for the startup times of the extension and its plugins
 
 ## 1.0.2 (2025-09-02)
 
