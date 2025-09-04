@@ -3,7 +3,7 @@ import os from "node:os";
 import type { LogOutputChannel } from "vscode";
 import { extensions, version as vscodeVersion, workspace } from "vscode";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 const ANALYTICS_API_URL =
 	process.env.ANALYTICS_API_URL ??
@@ -17,12 +17,6 @@ type Events =
 			payload: {
 				namespace: "onboarding";
 				origin: "manual_trigger" | "extension_startup";
-				expected_steps: {
-					name: string;
-					is_first_step: boolean;
-					is_last_step: boolean;
-					position: number;
-				}[];
 			};
 	  }
 	| {
@@ -30,7 +24,7 @@ type Events =
 			payload: {
 				namespace: "onboarding";
 				origin: "manual_trigger" | "extension_startup";
-				position: 1;
+				step_order: 1;
 				started_at: string;
 				ended_at: string;
 				status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
@@ -43,7 +37,20 @@ type Events =
 			payload: {
 				namespace: "onboarding";
 				origin: "manual_trigger" | "extension_startup";
-				position: 2;
+				step_order: 2;
+				auth_token?: string;
+				started_at: string;
+				ended_at: string;
+				status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
+				errors?: string[];
+			};
+	  }
+	| {
+			name: "license_setup_ended";
+			payload: {
+				namespace: "onboarding";
+				origin: "manual_trigger" | "extension_startup";
+				step_order: 3;
 				auth_token?: string;
 				started_at: string;
 				ended_at: string;
@@ -56,19 +63,50 @@ type Events =
 			payload: {
 				namespace: "onboarding";
 				origin: "manual_trigger" | "extension_startup";
-				position: 3;
+				step_order: 4;
 				started_at: string;
 				ended_at: string;
 				status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
 				errors?: string[];
+				auth_token: string;
 			};
 	  }
 	| {
 			name: "setup_ended";
 			payload: {
 				namespace: "onboarding";
-				steps: number[];
+				steps: [
+					{
+						name: "emulator_installed";
+						is_first_step: true;
+						is_last_step: false;
+						step_order: 1;
+						status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
+					},
+					{
+						name: "auth_token_configured";
+						is_first_step: false;
+						is_last_step: false;
+						step_order: 2;
+						status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
+					},
+					{
+						name: "license_setup_ended";
+						is_first_step: false;
+						is_last_step: false;
+						step_order: 3;
+						status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
+					},
+					{
+						name: "aws_profile_configured";
+						is_first_step: false;
+						is_last_step: true;
+						step_order: 4;
+						status: "COMPLETED" | "FAILED" | "SKIPPED" | "CANCELLED";
+					},
+				];
 				status: "COMPLETED" | "FAILED" | "CANCELLED";
+				auth_token: string;
 			};
 	  }
 	| {
@@ -78,6 +116,7 @@ type Events =
 				status: "COMPLETED" | "FAILED";
 				emulator_session_id?: string;
 				errors?: string[];
+				auth_token: string;
 			};
 	  }
 	| {
@@ -87,6 +126,7 @@ type Events =
 				status: "COMPLETED" | "FAILED";
 				emulator_session_id?: string;
 				errors?: string[];
+				auth_token: string;
 			};
 	  };
 
@@ -127,6 +167,7 @@ async function postEvent(
 export function createTelemetry(
 	outputChannel: LogOutputChannel,
 	sessionId: string,
+	machineId: string,
 ): Telemetry {
 	return {
 		track(event) {
@@ -152,6 +193,7 @@ export function createTelemetry(
 				schema_version: SCHEMA_VERSION,
 				ide_version: vscodeVersion,
 				extension_version: extensionVersion,
+				machine_id: machineId,
 				operating_system: os.platform(),
 				// if anything inside payload include it
 				...event.payload,

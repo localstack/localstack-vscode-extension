@@ -1,7 +1,8 @@
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7, v4 as uuidv4 } from "uuid";
 import type { ExtensionContext, LogOutputChannel, MessageItem } from "vscode";
 import { commands, env, Uri, window } from "vscode";
 
+import { readAuthToken } from "./authenticate.ts";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
 import { checkIsLicenseValid } from "./license.ts";
@@ -22,18 +23,21 @@ export async function fetchHealth(): Promise<boolean> {
 		return false;
 	}
 }
-
 async function fetchLocalStackSessionId(): Promise<string> {
-	try {
-		// TODO info endpoint is not available immediately
-		// potentially improve this later for tracking "vscode:emulator:started"
-		const infoResponse = await fetch("http://127.0.0.1:4566/_localstack/info");
-		if (infoResponse.ok) {
-			const info = (await infoResponse.json()) as { session_id?: string };
-			return info.session_id ?? "";
+	// retry a few times to allow LocalStack to start up and info become available
+	for (let attempt = 0; attempt < 10; attempt++) {
+		try {
+			const response = await fetch("http://127.0.0.1:4566/_localstack/info");
+			if (response.ok) {
+				const json = await response.json();
+				if (typeof json === "object" && json !== null && "session_id" in json) {
+					return typeof json.session_id === "string" ? json.session_id : "";
+				}
+			}
+		} catch {
+			// ignore error and retry
 		}
-	} catch {
-		// unable to fetch session id
+		await new Promise((resolve) => setTimeout(resolve, 1000));
 	}
 	return "";
 }
@@ -91,6 +95,7 @@ export async function startLocalStack(
 		command: "localstack.viewLogs",
 	});
 
+	const authToken = await readAuthToken();
 	try {
 		await spawnLocalStack(
 			[
@@ -129,6 +134,7 @@ export async function startLocalStack(
 				namespace: "emulator",
 				status: "COMPLETED",
 				emulator_session_id: emulatorSessionId,
+				auth_token: authToken,
 			},
 		});
 	} catch (error) {
@@ -152,6 +158,7 @@ export async function startLocalStack(
 				namespace: "emulator",
 				status: "FAILED",
 				errors: [String(error)],
+				auth_token: authToken,
 			},
 		});
 	}
@@ -163,6 +170,7 @@ export async function stopLocalStack(
 ) {
 	void showInformationMessage("Stopping LocalStack.");
 
+	const authToken = await readAuthToken();
 	try {
 		// get session id before killing container
 		const emulatorSessionId = await fetchLocalStackSessionId();
@@ -177,6 +185,7 @@ export async function stopLocalStack(
 				namespace: "emulator",
 				status: "COMPLETED",
 				emulator_session_id: emulatorSessionId,
+				auth_token: authToken,
 			},
 		});
 	} catch (error) {
@@ -191,6 +200,7 @@ export async function stopLocalStack(
 				namespace: "emulator",
 				status: "FAILED",
 				errors: [String(error)],
+				auth_token: authToken,
 			},
 		});
 	}
@@ -255,4 +265,16 @@ export async function getOrCreateExtensionSessionId(
 		await context.workspaceState.update("session_id", sessionId);
 	}
 	return sessionId;
+}
+
+// Checks for machine id in workspaceState, creates if missing (to avoid calling machineId multiple times)
+export async function getOrCreateMachineId(
+	context: ExtensionContext,
+): Promise<string> {
+	let machineIdValue = context.workspaceState.get<string>("machine_id");
+	if (!machineIdValue) {
+		machineIdValue = uuidv4();
+		await context.workspaceState.update("machine_id", machineIdValue);
+	}
+	return machineIdValue;
 }

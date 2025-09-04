@@ -143,7 +143,7 @@ export async function checkIsAuthenticated() {
 			return false;
 		}
 		return true;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }
@@ -154,4 +154,22 @@ function isAuthTokenPresent(authObject: unknown) {
 		authObject !== null &&
 		AUTH_TOKEN_KEY in authObject
 	);
+}
+
+// Reads the auth token from the auth.json file for logging in the user
+export async function readAuthToken(): Promise<string> {
+	try {
+		const authJson = await fs.readFile(LOCALSTACK_AUTH_FILENAME, "utf-8");
+		const authObject = JSON.parse(authJson) as unknown;
+		if (!isAuthTokenPresent(authObject)) {
+			return "";
+		}
+		const authToken = authObject[AUTH_TOKEN_KEY];
+		if (typeof authToken !== "string") {
+			return "";
+		}
+		return authToken;
+	} catch {
+		return "";
+	}
 }

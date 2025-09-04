@@ -10,7 +10,10 @@ import statusBar from "./plugins/status-bar.ts";
 import { PluginManager } from "./plugins.ts";
 import { createContainerStatusTracker } from "./utils/container-status.ts";
 import { createLocalStackStatusTracker } from "./utils/localstack-status.ts";
-import { getOrCreateExtensionSessionId } from "./utils/manage.ts";
+import {
+	getOrCreateExtensionSessionId,
+	getOrCreateMachineId,
+} from "./utils/manage.ts";
 import { createSetupStatusTracker } from "./utils/setup-status.ts";
 import { createTelemetry } from "./utils/telemetry.ts";
 import { createTimeTracker } from "./utils/time-tracker.ts";
@@ -78,7 +81,8 @@ export async function activate(context: ExtensionContext) {
 		const startTelemetry = Date.now();
 		outputChannel.trace(`[telemetry]: Starting...`);
 		const sessionId = await getOrCreateExtensionSessionId(context);
-		const telemetry = createTelemetry(outputChannel, sessionId);
+		const machineId = await getOrCreateMachineId(context);
+		const telemetry = createTelemetry(outputChannel, sessionId, machineId);
 		const endTelemetry = Date.now();
 		outputChannel.trace(
 			`[telemetry]: Completed in ${ms(endTelemetry - startTelemetry, {

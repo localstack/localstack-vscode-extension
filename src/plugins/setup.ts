@@ -5,6 +5,7 @@ import {
 	checkIsAuthenticated,
 	requestAuthentication,
 	saveAuthToken,
+	readAuthToken,
 } from "../utils/authenticate.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
@@ -38,26 +39,6 @@ export default createPlugin(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							expected_steps: [
-								{
-									name: "emulator_installed",
-									is_first_step: true,
-									is_last_step: false,
-									position: 1,
-								},
-								{
-									name: "auth_token_configured",
-									is_first_step: false,
-									is_last_step: false,
-									position: 2,
-								},
-								{
-									name: "aws_profile_configured",
-									is_first_step: false,
-									is_last_step: true,
-									position: 3,
-								},
-							],
 						},
 					});
 
@@ -84,7 +65,7 @@ export default createPlugin(
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 1,
+											step_order: 1,
 											started_at: installationStartedAt,
 											ended_at: new Date().toISOString(),
 											status: "CANCELLED",
@@ -113,8 +94,38 @@ export default createPlugin(
 									name: "setup_ended",
 									payload: {
 										namespace: "onboarding",
-										steps: [1, 2, 3],
+										steps: [
+											{
+												name: "emulator_installed",
+												is_first_step: true,
+												is_last_step: false,
+												step_order: 1,
+												status: "COMPLETED",
+											},
+											{
+												name: "auth_token_configured",
+												is_first_step: false,
+												is_last_step: false,
+												step_order: 2,
+												status: "CANCELLED",
+											},
+											{
+												name: "license_setup_ended",
+												is_first_step: false,
+												is_last_step: false,
+												step_order: 3,
+												status: "SKIPPED",
+											},
+											{
+												name: "aws_profile_configured",
+												is_first_step: false,
+												is_last_step: true,
+												step_order: 4,
+												status: "SKIPPED",
+											},
+										],
 										status: "CANCELLED",
+										auth_token: await readAuthToken(),
 									},
 								});
 								return;
@@ -128,7 +139,7 @@ export default createPlugin(
 									payload: {
 										namespace: "onboarding",
 										origin: origin_trigger,
-										position: 2,
+										step_order: 2,
 										started_at: authStartedAuthAt,
 										ended_at: new Date().toISOString(),
 										status: "SKIPPED",
@@ -153,7 +164,7 @@ export default createPlugin(
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 2,
+											step_order: 2,
 											auth_token: authToken,
 											started_at: authStartedAuthAt,
 											ended_at: new Date().toISOString(),
@@ -174,7 +185,7 @@ export default createPlugin(
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 2,
+											step_order: 2,
 											auth_token: authToken,
 											started_at: authStartedAuthAt,
 											ended_at: new Date().toISOString(),
@@ -193,6 +204,7 @@ export default createPlugin(
 							// then there will be no license info to be reported by `localstack license info`.
 							// Also, an expired license could be cached.
 							// Activating the license pre-emptively to know its state during the setup process.
+							const licenseCheckStartedAt = new Date().toISOString();
 							const licenseIsValid = await minDelay(
 								activateLicense(outputChannel).then(() =>
 									checkIsLicenseValid(outputChannel),
@@ -209,14 +221,27 @@ export default createPlugin(
 								await activateLicenseUntilValid(
 									outputChannel,
 									cancellationToken,
+									telemetry,
+									origin_trigger,
+									licenseCheckStartedAt,
 								);
 							}
 
 							if (cancellationToken.isCancellationRequested) {
+								telemetry.track({
+									name: "license_setup_ended",
+									payload: {
+										namespace: "onboarding",
+										step_order: 3,
+										origin: origin_trigger,
+										auth_token: await readAuthToken(),
+										started_at: licenseCheckStartedAt,
+										ended_at: new Date().toISOString(),
+										status: "COMPLETED",
+									},
+								});
 								return;
 							}
-
-							//TODO add telemetry
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
@@ -285,8 +310,38 @@ export default createPlugin(
 								name: "setup_ended",
 								payload: {
 									namespace: "onboarding",
-									steps: [1, 2, 3],
+									steps: [
+										{
+											name: "emulator_installed",
+											is_first_step: true,
+											is_last_step: false,
+											step_order: 1,
+											status: "COMPLETED",
+										},
+										{
+											name: "auth_token_configured",
+											is_first_step: false,
+											is_last_step: false,
+											step_order: 2,
+											status: "COMPLETED",
+										},
+										{
+											name: "license_setup_ended",
+											is_first_step: false,
+											is_last_step: false,
+											step_order: 3,
+											status: "COMPLETED",
+										},
+										{
+											name: "aws_profile_configured",
+											is_first_step: false,
+											is_last_step: true,
+											step_order: 4,
+											status: "COMPLETED",
+										},
+									],
 									status: "COMPLETED",
+									auth_token: await readAuthToken(),
 								},
 							});
 						},
