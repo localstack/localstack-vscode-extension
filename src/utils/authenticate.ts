@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -11,7 +10,6 @@ import type {
 import { env, Uri, window } from "vscode";
 
 import { assertIsError } from "./assert.ts";
-import { execLocalStack } from "./cli.ts";
 
 /**
  * Registers a {@link UriHandler} that waits for an authentication token from the browser,
@@ -111,21 +109,6 @@ export async function saveAuthToken(
 			.then(() => {
 				outputChannel.show(true);
 			});
-	}
-}
-
-const LICENSE_VALIDITY_MARKER = "license validity: valid";
-
-export async function checkIsLicenseValid(outputChannel: LogOutputChannel) {
-	try {
-		const licenseInfoResponse = await execLocalStack(["license", "info"], {
-			outputChannel,
-		});
-		return licenseInfoResponse.stdout.includes(LICENSE_VALIDITY_MARKER);
-	} catch (error) {
-		outputChannel.error(error instanceof Error ? error : String(error));
-
-		return undefined;
 	}
 }
 
