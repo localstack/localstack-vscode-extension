@@ -3,17 +3,20 @@ import type { LogOutputChannel } from "vscode";
 import { checkIsAuthenticated } from "./authenticate.ts";
 import { checkIsProfileConfigured } from "./configure-aws.ts";
 import { checkLocalstackInstalled } from "./install.ts";
+import { checkIsLicenseValid } from "./license.ts";
 
 export async function checkIsSetupRequired(
 	outputChannel: LogOutputChannel,
 ): Promise<boolean> {
-	const [isInstalled, isAuthenticated, isProfileConfigured] = await Promise.all(
-		[
+	const [isInstalled, isAuthenticated, isLicenseValid, isProfileConfigured] =
+		await Promise.all([
 			checkLocalstackInstalled(outputChannel),
 			checkIsAuthenticated(),
+			checkIsLicenseValid(outputChannel),
 			checkIsProfileConfigured(),
-		],
-	);
+		]);
 
-	return !isInstalled || !isAuthenticated || !isProfileConfigured;
+	return (
+		!isInstalled || !isAuthenticated || !isLicenseValid || !isProfileConfigured
+	);
 }
