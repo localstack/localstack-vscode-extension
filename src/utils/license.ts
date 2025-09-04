@@ -18,9 +18,13 @@ export async function checkIsLicenseValid(outputChannel: LogOutputChannel) {
 }
 
 export async function activateLicense(outputChannel: LogOutputChannel) {
-	await execLocalStack(["license", "activate"], {
-		outputChannel,
-	});
+	try {
+		await execLocalStack(["license", "activate"], {
+			outputChannel,
+		});
+	} catch (error) {
+		outputChannel.error(error instanceof Error ? error : String(error));
+	}
 }
 
 export async function activateLicenseUntilValid(
