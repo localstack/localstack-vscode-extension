@@ -5,6 +5,7 @@ import { createPlugin } from "../plugins.ts";
 import { pipeToLogOutputChannel } from "../utils/spawn.ts";
 
 export default createPlugin(
+	"logs",
 	({ context, outputChannel, containerStatusTracker }) => {
 		let logsProcess: ChildProcess | undefined;
 

@@ -1,9 +1,11 @@
+import ms from "ms";
 import type { ExtensionContext, LogOutputChannel, StatusBarItem } from "vscode";
 
 import type { ContainerStatusTracker } from "./utils/container-status.ts";
 import type { LocalStackStatusTracker } from "./utils/localstack-status.ts";
 import type { SetupStatusTracker } from "./utils/setup-status.ts";
 import type { Telemetry } from "./utils/telemetry.ts";
+import type { TimeTracker } from "./utils/time-tracker.ts";
 
 export type Deactivate = () => Promise<void> | void;
 
@@ -15,40 +17,59 @@ export interface PluginOptions {
 	localStackStatusTracker: LocalStackStatusTracker;
 	setupStatusTracker: SetupStatusTracker;
 	telemetry: Telemetry;
+	timeTracker: TimeTracker;
 }
 
 export interface Plugin {
 	deactivate: Deactivate;
 }
 
-export type PluginFactory = (options: PluginOptions) => Promise<Plugin>;
+export type PluginDefinition = {
+	name: string;
+	factory: (options: PluginOptions) => Promise<Plugin>;
+};
 
 export const createPlugin = (
+	name: string,
 	// biome-ignore lint/suspicious/noConfusingVoidType: required
 	handler: (options: PluginOptions) => Promise<Deactivate | void> | void,
-): PluginFactory => {
-	return async (options) => {
-		const deactivate = (await handler(options)) ?? (() => {});
-		return {
-			deactivate,
-		};
+): PluginDefinition => {
+	return {
+		name,
+		async factory(options: PluginOptions): Promise<Plugin> {
+			const deactivate = (await handler(options)) ?? (() => {});
+			return {
+				deactivate,
+			};
+		},
 	};
 };
 
 export class PluginManager {
-	private plugins: PluginFactory[];
+	private plugins: PluginDefinition[];
 
 	private deactivatables: Plugin[];
 
-	constructor(plugins: PluginFactory[]) {
+	constructor(plugins: PluginDefinition[]) {
 		this.plugins = plugins;
 		this.deactivatables = [];
 	}
 
 	async activate(options: PluginOptions) {
 		for (const activate of this.plugins) {
-			const deactivatable = await activate(options);
+			const startPlugin = Date.now();
+			options.outputChannel.trace(
+				`[plugin-manager]: Activating plugin "${activate.name}"...`,
+			);
+			const deactivatable = await activate.factory(options);
 			this.deactivatables.push(deactivatable);
+			const endPlugin = Date.now();
+			options.outputChannel.trace(
+				`[plugin-manager]: Activated plugin "${activate.name}" in ${ms(
+					endPlugin - startPlugin,
+					{ long: true },
+				)}`,
+			);
 		}
 	}
 

@@ -13,6 +13,7 @@ import { runInstallProcess } from "../utils/install.ts";
 import { minDelay } from "../utils/promises.ts";
 
 export default createPlugin(
+	"setup",
 	({ context, outputChannel, setupStatusTracker, telemetry }) => {
 		context.subscriptions.push(
 			commands.registerCommand(

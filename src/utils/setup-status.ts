@@ -2,6 +2,7 @@ import type { Disposable, LogOutputChannel } from "vscode";
 
 import { createEmitter } from "./emitter.ts";
 import { checkIsSetupRequired } from "./setup.ts";
+import type { TimeTracker } from "./time-tracker.ts";
 
 export type SetupStatus = "ok" | "setup_required";
 
@@ -15,6 +16,7 @@ export interface SetupStatusTracker extends Disposable {
  */
 export async function createSetupStatusTracker(
 	outputChannel: LogOutputChannel,
+	timeTracker: TimeTracker,
 ): Promise<SetupStatusTracker> {
 	let status: SetupStatus | undefined;
 	const emitter = createEmitter<SetupStatus>(outputChannel);
@@ -31,7 +33,9 @@ export async function createSetupStatusTracker(
 		timeout = setTimeout(() => void startChecking(), 1_000);
 	};
 
-	await startChecking();
+	await timeTracker.run("checkIsSetupRequired", async () => {
+		await startChecking();
+	});
 
 	return {
 		status() {
