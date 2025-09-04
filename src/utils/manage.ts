@@ -108,6 +108,8 @@ export async function startLocalStack(
 				outputChannel,
 				onStderr(data: Buffer, context) {
 					const text = data.toString();
+					// Currently, the LocalStack CLI does not return a non-zero exit code if the container fails to start.
+					// As a workaround, we look for a specific error message in the output to determine if the container failed to start.
 					if (
 						text.includes(
 							"localstack.utils.container_utils.container_client.ContainerException",
