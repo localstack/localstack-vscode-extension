@@ -115,6 +115,7 @@ export async function startLocalStack(
 							"localstack.utils.container_utils.container_client.ContainerException",
 						)
 					) {
+						// Abort the process if we detect a ContainerException, otherwise it will hang indefinitely.
 						context.abort();
 						throw new Error("ContainerException");
 					}
