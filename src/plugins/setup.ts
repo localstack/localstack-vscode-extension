@@ -176,7 +176,9 @@ export default createPlugin(
 							// Activating the license pre-emptively to know its state during the setup process.
 							await activateLicense(outputChannel);
 							const licenseIsValid = await minDelay(
-								checkIsLicenseValid(outputChannel),
+								activateLicense(outputChannel).then(() =>
+									checkIsLicenseValid(outputChannel),
+								),
 							);
 							if (licenseIsValid) {
 								progress.report({
