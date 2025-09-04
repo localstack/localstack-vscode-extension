@@ -168,6 +168,10 @@ export default createPlugin(
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
 
+							// If an auth token has just been obtained or LocalStack has never been started,
+							// then there will be no license info to be reported by `localstack license info`.
+							// Also, an expired license could be cached.
+							// Activating the license pre-emptively to know its state during the setup process.
 							await execLocalStack(["license", "activate"], {
 								outputChannel,
 							});
@@ -183,9 +187,12 @@ export default createPlugin(
 									message:
 										"License is not valid or not assigned. Open License settings page to activate it.",
 								});
+
 								commands.executeCommand("localstack.openLicensePage");
+
 								await checkLicenseUntilValid(outputChannel);
 							}
+							//TODO add telemetry
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
