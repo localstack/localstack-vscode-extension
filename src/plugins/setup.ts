@@ -179,11 +179,7 @@ export default createPlugin(
 									checkIsLicenseValid(outputChannel),
 								),
 							);
-							if (licenseIsValid) {
-								progress.report({
-									message: "License verified successfully...",
-								});
-							} else {
+							if (!licenseIsValid) {
 								progress.report({
 									message:
 										"License is not valid or not assigned. Open License settings page to activate it.",
