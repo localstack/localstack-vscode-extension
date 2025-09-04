@@ -133,6 +133,14 @@ export class SpawnError extends Error {
 	}
 }
 
+export interface SpawnOptions {
+	outputLabel?: string;
+	outputChannel: LogOutputChannel;
+	cancellationToken?: CancellationToken;
+	environment?: Record<string, string | undefined> | undefined;
+	onStderr?: (data: Buffer, context: { abort: () => void }) => void;
+}
+
 /**
  * Spawns a new process using the given `command`, with command-line arguments in `args`.
  * - All output is appended to the `options.outputChannel`, optionally prefixed by `options.outputLabel`.
@@ -143,12 +151,7 @@ export class SpawnError extends Error {
 export const spawn = (
 	command: string,
 	args: string[],
-	options: {
-		outputLabel?: string;
-		outputChannel: LogOutputChannel;
-		cancellationToken?: CancellationToken;
-		environment?: Record<string, string | undefined> | undefined;
-	},
+	options: SpawnOptions,
 ) => {
 	return new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
 		(resolve, reject) => {
@@ -169,23 +172,37 @@ export const spawn = (
 
 			const child = childProcess.spawn(command, args, spawnOptions);
 
+			const killChild = () => {
+				// Use SIGINT on Unix, 'SIGTERM' on Windows
+				const isWindows = os.platform() === "win32";
+				if (isWindows) {
+					child.kill("SIGTERM");
+				} else {
+					child.kill("SIGINT");
+				}
+			};
+
 			const disposeCancel = options.cancellationToken?.onCancellationRequested(
 				() => {
 					outputChannel.appendLine(
 						`${outputLabel}Command cancelled: ${commandLine}`,
 					);
-					// Use SIGINT on Unix, 'SIGTERM' on Windows
-					const isWindows = os.platform() === "win32";
-					if (isWindows) {
-						child.kill("SIGTERM");
-					} else {
-						child.kill("SIGINT");
-					}
+					killChild();
 					reject(new Error("Command cancelled"));
 				},
 			);
 
 			pipeToLogOutputChannel(child, outputChannel, outputLabel);
+
+			if (options.onStderr) {
+				child.stderr?.on("data", (data: Buffer) =>
+					options.onStderr?.(data, {
+						abort() {
+							killChild();
+						},
+					}),
+				);
+			}
 
 			child.on("close", (code, signal) => {
 				disposeCancel?.dispose();

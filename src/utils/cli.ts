@@ -8,6 +8,7 @@ import { CLI_PATHS } from "../constants.ts";
 
 import { exec } from "./exec.ts";
 import { spawn } from "./spawn.ts";
+import type { SpawnOptions } from "./spawn.ts";
 
 const IMAGE_NAME = "localstack/localstack-pro";
 const LOCALSTACK_LDM_PREVIEW = "1";
@@ -68,6 +69,7 @@ export const spawnLocalStack = async (
 	options: {
 		outputChannel: LogOutputChannel;
 		cancellationToken?: CancellationToken;
+		onStderr?: SpawnOptions["onStderr"];
 	},
 ) => {
 	const cli = await findLocalStack();
@@ -81,5 +83,6 @@ export const spawnLocalStack = async (
 			IMAGE_NAME,
 			LOCALSTACK_LDM_PREVIEW,
 		},
+		onStderr: options.onStderr,
 	});
 };

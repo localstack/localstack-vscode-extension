@@ -5,6 +5,7 @@ import { commands, env, Uri, window } from "vscode";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
 import { checkIsLicenseValid } from "./license.ts";
+import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
 
 export type LocalstackStatus = "running" | "starting" | "stopping" | "stopped";
@@ -85,7 +86,7 @@ export async function getLocalstackStatus(): Promise<LocalstackStatus> {
 export async function startLocalStack(
 	outputChannel: LogOutputChannel,
 	telemetry: Telemetry,
-) {
+): Promise<void> {
 	void showInformationMessage("Starting LocalStack.", {
 		title: "View Logs",
 		command: "localstack.viewLogs",
@@ -105,6 +106,20 @@ export async function startLocalStack(
 			],
 			{
 				outputChannel,
+				onStderr(data: Buffer, context) {
+					const text = data.toString();
+					// Currently, the LocalStack CLI does not exit if the container fails to start in specific scenarios.
+					// As a workaround, we look for a specific error message in the output to determine if the container failed to start.
+					if (
+						text.includes(
+							"localstack.utils.container_utils.container_client.ContainerException",
+						)
+					) {
+						// Abort the process if we detect a ContainerException, otherwise it will hang indefinitely.
+						context.abort();
+						throw new Error("ContainerException");
+					}
+				},
 			},
 		);
 
@@ -129,6 +144,7 @@ export async function startLocalStack(
 				title: "View Logs",
 				command: "localstack.viewLogs",
 			});
+			throw error;
 		}
 
 		telemetry.track({
