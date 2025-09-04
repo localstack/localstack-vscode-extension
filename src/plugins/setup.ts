@@ -174,7 +174,6 @@ export default createPlugin(
 							// then there will be no license info to be reported by `localstack license info`.
 							// Also, an expired license could be cached.
 							// Activating the license pre-emptively to know its state during the setup process.
-							await activateLicense(outputChannel);
 							const licenseIsValid = await minDelay(
 								activateLicense(outputChannel).then(() =>
 									checkIsLicenseValid(outputChannel),
