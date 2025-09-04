@@ -5,6 +5,7 @@ import { commands, env, Uri, window } from "vscode";
 import { checkIsLicenseValid } from "./authenticate.ts";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
+import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
 
 export type LocalstackStatus = "running" | "starting" | "stopping" | "stopped";
@@ -85,7 +86,7 @@ export async function getLocalstackStatus(): Promise<LocalstackStatus> {
 export async function startLocalStack(
 	outputChannel: LogOutputChannel,
 	telemetry: Telemetry,
-) {
+): Promise<void> {
 	void showInformationMessage("Starting LocalStack.", {
 		title: "View Logs",
 		command: "localstack.viewLogs",
@@ -105,6 +106,17 @@ export async function startLocalStack(
 			],
 			{
 				outputChannel,
+				onStderr(data: Buffer, context) {
+					const text = data.toString();
+					if (
+						text.includes(
+							"localstack.utils.container_utils.container_client.ContainerException",
+						)
+					) {
+						context.abort();
+						throw new Error("ContainerException");
+					}
+				},
 			},
 		);
 
@@ -129,6 +141,7 @@ export async function startLocalStack(
 				title: "View Logs",
 				command: "localstack.viewLogs",
 			});
+			throw error;
 		}
 
 		telemetry.track({

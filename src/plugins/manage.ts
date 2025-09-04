@@ -17,13 +17,17 @@ export default createPlugin(
 		);
 
 		context.subscriptions.push(
-			commands.registerCommand("localstack.start", () => {
+			commands.registerCommand("localstack.start", async () => {
 				if (localStackStatusTracker.status() !== "stopped") {
 					window.showInformationMessage("LocalStack is already running.");
 					return;
 				}
-				localStackStatusTracker.forceStarting();
-				void startLocalStack(outputChannel, telemetry);
+				localStackStatusTracker.forceContainerStatus("running");
+				try {
+					await startLocalStack(outputChannel, telemetry);
+				} catch {
+					localStackStatusTracker.forceContainerStatus("stopped");
+				}
 			}),
 		);
 
@@ -33,7 +37,7 @@ export default createPlugin(
 					window.showInformationMessage("LocalStack is not running.");
 					return;
 				}
-				localStackStatusTracker.forceStopping();
+				localStackStatusTracker.forceContainerStatus("stopping");
 				void stopLocalStack(outputChannel, telemetry);
 			}),
 		);

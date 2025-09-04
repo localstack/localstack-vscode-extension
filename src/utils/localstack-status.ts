@@ -11,9 +11,7 @@ export type LocalStackStatus = "starting" | "running" | "stopping" | "stopped";
 
 export interface LocalStackStatusTracker extends Disposable {
 	status(): LocalStackStatus;
-	// setStatus(status: LocalStackStatus): void;
-	forceStarting(): void;
-	forceStopping(): void;
+	forceContainerStatus(status: ContainerStatus): void;
 	onChange(callback: (status: LocalStackStatus) => void): void;
 }
 
@@ -66,15 +64,9 @@ export async function createLocalStackStatusTracker(
 			// biome-ignore lint/style/noNonNullAssertion: false positive
 			return status!;
 		},
-		forceStarting() {
-			if (containerStatus !== "running") {
-				containerStatus = "running";
-				deriveStatus();
-			}
-		},
-		forceStopping() {
-			if (containerStatus !== "stopping") {
-				containerStatus = "stopping";
+		forceContainerStatus(newContainerStatus) {
+			if (containerStatus !== newContainerStatus) {
+				containerStatus = newContainerStatus;
 				deriveStatus();
 			}
 		},
