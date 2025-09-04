@@ -292,10 +292,9 @@ export async function configureAwsProfiles(options: {
 	let configModified: boolean | undefined;
 	let credentialsModified: boolean | undefined;
 
-	const [configNeedsOverride, credentialsNeedsOverride] = await Promise.all([
-		checkIfConfigNeedsOverride(configSection),
-		checkIfCredentialsNeedsOverride(credentialsSection),
-	]);
+	const configNeedsOverride = checkIfConfigNeedsOverride(configSection);
+	const credentialsNeedsOverride =
+		checkIfCredentialsNeedsOverride(credentialsSection);
 
 	// means sections exist, but we need to check what's inside
 	if (credentialsSection && configSection) {
