@@ -24,7 +24,7 @@ export async function createSetupStatusTracker(
 	const emitter = createEmitter<SetupStatus>(outputChannel);
 	const end = Date.now();
 	outputChannel.trace(
-		`[setup-status-tracker]: Initialized dependencies in ${ms(end - start, { long: true })}`,
+		`[setup-status]: Initialized dependencies in ${ms(end - start, { long: true })}`,
 	);
 
 	let timeout: NodeJS.Timeout | undefined;
