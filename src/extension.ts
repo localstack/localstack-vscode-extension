@@ -92,21 +92,18 @@ export async function activate(context: ExtensionContext) {
 		)}`,
 	);
 
-	const startPlugins = Date.now();
-	await plugins.activate({
-		context,
-		outputChannel,
-		statusBarItem,
-		containerStatusTracker,
-		localStackStatusTracker,
-		setupStatusTracker,
-		telemetry,
-		timeTracker,
+	await timeTracker.run("extension.activatePlugins", async () => {
+		await plugins.activate({
+			context,
+			outputChannel,
+			statusBarItem,
+			containerStatusTracker,
+			localStackStatusTracker,
+			setupStatusTracker,
+			telemetry,
+			timeTracker,
+		});
 	});
-	const endPlugins = Date.now();
-	outputChannel.trace(
-		`[extension]: Plugins activated in ${ms(endPlugins - startPlugins, { long: true })}`,
-	);
 }
 
 export async function deactivate() {
