@@ -191,6 +191,9 @@ async function getContainerStatus(
 	containerName: string,
 ): Promise<ContainerStatus> {
 	return new Promise((resolve) => {
+		// timeout after 1s
+		setTimeout(() => resolve("stopped"), 1_000);
+
 		exec(
 			`docker inspect --format {{.State.Status}} ${containerName}`,
 			(error, stdout) => {
