@@ -1,6 +1,5 @@
-import os from "node:os";
-
 import { commands, ProgressLocation, window } from "vscode";
+import type { LogOutputChannel } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
 import {
@@ -167,17 +166,23 @@ export default createPlugin(
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
+
+							//TODO try to activate the license first
+
 							const licenseIsValid = await minDelay(
 								checkIsLicenseValid(outputChannel),
 							);
 							if (licenseIsValid) {
-								progress.report({ message: "License verified succesfully..." });
+								progress.report({
+									message: "License verified successfully...",
+								});
 							} else {
 								progress.report({
 									message:
 										"License is not valid or not assigned, please check License settings page...",
 								});
 								commands.executeCommand("localstack.openLicensePage");
+								await checkLicenseUntilValid(outputChannel);
 							}
 
 							/////////////////////////////////////////////////////////////////////
@@ -238,3 +243,18 @@ export default createPlugin(
 		}
 	},
 );
+
+async function checkLicenseUntilValid(
+	outputChannel: LogOutputChannel,
+): Promise<void> {
+	while (true) {
+		const licenseIsValid = await checkIsLicenseValid(outputChannel);
+		if (licenseIsValid) {
+			break;
+		}
+		//TODO try to activate the license
+
+		// Wait 2 seconds before trying again
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+	}
+}
