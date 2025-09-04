@@ -8,10 +8,10 @@ import {
 	requestAuthentication,
 	saveAuthToken,
 } from "../utils/authenticate.ts";
+import { execLocalStack } from "../utils/cli.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
 import { minDelay } from "../utils/promises.ts";
-import {execLocalStack} from "../utils/cli.ts";
 
 export default createPlugin(
 	({ context, outputChannel, setupStatusTracker, telemetry }) => {
@@ -168,10 +168,9 @@ export default createPlugin(
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
 
-                            const licenseActivateResponse = await execLocalStack(["license", "activate"], {
-                                outputChannel,
-                            });
-
+							await execLocalStack(["license", "activate"], {
+								outputChannel,
+							});
 							const licenseIsValid = await minDelay(
 								checkIsLicenseValid(outputChannel),
 							);
@@ -182,7 +181,7 @@ export default createPlugin(
 							} else {
 								progress.report({
 									message:
-										"License is not valid or not assigned, please check License settings page...",
+										"License is not valid or not assigned. Open License settings page to activate it.",
 								});
 								commands.executeCommand("localstack.openLicensePage");
 								await checkLicenseUntilValid(outputChannel);
@@ -255,10 +254,9 @@ async function checkLicenseUntilValid(
 		if (licenseIsValid) {
 			break;
 		}
-        const licenseActivateResponse = await execLocalStack(["license", "activate"], {
-            outputChannel,
-        });
-
+		await execLocalStack(["license", "activate"], {
+			outputChannel,
+		});
 		// Wait 2 seconds before trying again
 		await new Promise((resolve) => setTimeout(resolve, 2000));
 	}
