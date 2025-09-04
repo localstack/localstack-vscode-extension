@@ -81,7 +81,9 @@ function listenToContainerStatus(
 	const startListening = () => {
 		if (isDisposed) return;
 
-		outputChannel.debug("Spawning 'docker events'...");
+		outputChannel.debug(
+			"[container-status.listenToContainerStatus] Spawning 'docker events'...",
+		);
 
 		try {
 			dockerEvents = spawn("docker", [

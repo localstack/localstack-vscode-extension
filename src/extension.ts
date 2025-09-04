@@ -26,71 +26,76 @@ const plugins = new PluginManager([
 ]);
 
 export async function activate(context: ExtensionContext) {
-	const startDependencies = Date.now();
-
 	const outputChannel = window.createOutputChannel("LocalStack", {
 		log: true,
 	});
 	context.subscriptions.push(outputChannel);
 
-	outputChannel.trace(`[extension]: Creating dependencies...`);
-
 	const timeTracker = createTimeTracker({ outputChannel });
 
-	const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, -1);
-	context.subscriptions.push(statusBarItem);
-	statusBarItem.text = "$(loading~spin) LocalStack";
-	statusBarItem.show();
-
-	const containerStatusTracker = await createContainerStatusTracker(
-		"localstack-main",
-		outputChannel,
-		timeTracker,
-	);
-	context.subscriptions.push(containerStatusTracker);
-
-	const localStackStatusTracker = await createLocalStackStatusTracker(
+	const {
 		containerStatusTracker,
-		outputChannel,
-		timeTracker,
-	);
-	context.subscriptions.push(localStackStatusTracker);
+		localStackStatusTracker,
+		setupStatusTracker,
+		statusBarItem,
+		telemetry,
+	} = await timeTracker.run("extension.dependencies", async () => {
+		const statusBarItem = window.createStatusBarItem(
+			StatusBarAlignment.Left,
+			-1,
+		);
+		context.subscriptions.push(statusBarItem);
+		statusBarItem.text = "$(loading~spin) LocalStack";
+		statusBarItem.show();
 
-	outputChannel.trace(`[setup-status-tracker]: Starting...`);
-	const startStatusTracker = Date.now();
-	const setupStatusTracker = await createSetupStatusTracker(
-		outputChannel,
-		timeTracker,
-	);
-	context.subscriptions.push(setupStatusTracker);
-	const endStatusTracker = Date.now();
-	outputChannel.trace(
-		`[setup-status-tracker]: Completed in ${ms(
-			endStatusTracker - startStatusTracker,
-			{ long: true },
-		)}`,
-	);
+		const containerStatusTracker = await createContainerStatusTracker(
+			"localstack-main",
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(containerStatusTracker);
 
-	const startTelemetry = Date.now();
-	outputChannel.trace(`[telemetry]: Starting...`);
-	const sessionId = await getOrCreateExtensionSessionId(context);
-	const telemetry = createTelemetry(outputChannel, sessionId);
-	const endTelemetry = Date.now();
-	outputChannel.trace(
-		`[telemetry]: Completed in ${ms(endTelemetry - startTelemetry, {
-			long: true,
-		})}`,
-	);
+		const localStackStatusTracker = await createLocalStackStatusTracker(
+			containerStatusTracker,
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(localStackStatusTracker);
 
-	const endDependencies = Date.now();
-	outputChannel.trace(
-		`[extension]: Dependencies created in ${ms(
-			endDependencies - startDependencies,
-			{
+		outputChannel.trace(`[setup-status-tracker]: Starting...`);
+		const startStatusTracker = Date.now();
+		const setupStatusTracker = await createSetupStatusTracker(
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(setupStatusTracker);
+		const endStatusTracker = Date.now();
+		outputChannel.trace(
+			`[setup-status-tracker]: Completed in ${ms(
+				endStatusTracker - startStatusTracker,
+				{ long: true },
+			)}`,
+		);
+
+		const startTelemetry = Date.now();
+		outputChannel.trace(`[telemetry]: Starting...`);
+		const sessionId = await getOrCreateExtensionSessionId(context);
+		const telemetry = createTelemetry(outputChannel, sessionId);
+		const endTelemetry = Date.now();
+		outputChannel.trace(
+			`[telemetry]: Completed in ${ms(endTelemetry - startTelemetry, {
 				long: true,
-			},
-		)}`,
-	);
+			})}`,
+		);
+
+		return {
+			statusBarItem,
+			containerStatusTracker,
+			localStackStatusTracker,
+			setupStatusTracker,
+			telemetry,
+		};
+	});
 
 	await timeTracker.run("extension.activatePlugins", async () => {
 		await plugins.activate({

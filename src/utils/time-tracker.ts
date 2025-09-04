@@ -19,13 +19,13 @@ export const createTimeTracker = (options: {
 				const result = await fn();
 				const end = Date.now();
 				options.outputChannel.trace(
-					`[${name}]: completed in ${timeDiff(start, end)}`,
+					`[${name}]: Completed in ${timeDiff(start, end)}`,
 				);
 				return result;
 			} catch (error) {
 				const end = Date.now();
 				options.outputChannel.error(
-					`[${name}]: failed in ${timeDiff(start, end)}`,
+					`[${name}]: Failed after ${timeDiff(start, end)}`,
 				);
 				throw error;
 			}
