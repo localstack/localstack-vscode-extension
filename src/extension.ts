@@ -71,7 +71,7 @@ export async function activate(context: ExtensionContext) {
 		context.subscriptions.push(setupStatusTracker);
 		const endStatusTracker = Date.now();
 		outputChannel.trace(
-			`[setup-status-tracker]: Completed in ${ms(
+			`[setup-status]: Completed in ${ms(
 				endStatusTracker - startStatusTracker,
 				{ long: true },
 			)}`,
