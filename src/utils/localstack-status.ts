@@ -11,6 +11,9 @@ export type LocalStackStatus = "starting" | "running" | "stopping" | "stopped";
 
 export interface LocalStackStatusTracker extends Disposable {
 	status(): LocalStackStatus;
+	// setStatus(status: LocalStackStatus): void;
+	forceStarting(): void;
+	forceStopping(): void;
 	onChange(callback: (status: LocalStackStatus) => void): void;
 }
 
@@ -22,30 +25,36 @@ export async function createLocalStackStatusTracker(
 	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
 ): Promise<LocalStackStatusTracker> {
+	let containerStatus: ContainerStatus | undefined;
 	let status: LocalStackStatus | undefined;
 	const emitter = createEmitter<LocalStackStatus>(outputChannel);
 
 	let healthCheck: boolean | undefined;
 
-	const updateStatus = () => {
-		const newStatus = getLocalStackStatus(
-			containerStatusTracker.status(),
-			healthCheck,
-		);
+	const setStatus = (newStatus: LocalStackStatus) => {
 		if (status !== newStatus) {
 			status = newStatus;
+			outputChannel.debug(`[localstack.status]: ${status}`);
 			void emitter.emit(status);
 		}
 	};
 
-	containerStatusTracker.onChange(() => {
-		updateStatus();
+	const deriveStatus = () => {
+		const newStatus = getLocalStackStatus(containerStatus, healthCheck);
+		setStatus(newStatus);
+	};
+
+	containerStatusTracker.onChange((newContainerStatus) => {
+		if (containerStatus !== newContainerStatus) {
+			containerStatus = newContainerStatus;
+			deriveStatus();
+		}
 	});
 
 	let healthCheckTimeout: NodeJS.Timeout | undefined;
 	const startHealthCheck = async () => {
 		healthCheck = await fetchHealth();
-		updateStatus();
+		deriveStatus();
 		healthCheckTimeout = setTimeout(() => void startHealthCheck(), 1_000);
 	};
 
@@ -57,6 +66,18 @@ export async function createLocalStackStatusTracker(
 		status() {
 			// biome-ignore lint/style/noNonNullAssertion: false positive
 			return status!;
+		},
+		forceStarting() {
+			if (containerStatus !== "running") {
+				containerStatus = "running";
+				deriveStatus();
+			}
+		},
+		forceStopping() {
+			if (containerStatus !== "stopping") {
+				containerStatus = "stopping";
+				deriveStatus();
+			}
 		},
 		onChange(callback) {
 			emitter.on(callback);
