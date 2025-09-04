@@ -264,7 +264,7 @@ async function checkLicenseUntilValid(
 		await execLocalStack(["license", "activate"], {
 			outputChannel,
 		});
-		// Wait 2 seconds before trying again
-		await new Promise((resolve) => setTimeout(resolve, 2000));
+		// Wait before trying again
+		await new Promise((resolve) => setTimeout(resolve, 1000));
 	}
 }
