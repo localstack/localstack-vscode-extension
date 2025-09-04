@@ -46,6 +46,7 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(localStackStatusTracker);
 
+	context.subscriptions.push(setupStatusTracker);
 	const setupStatusTracker = await createSetupStatusTracker(outputChannel);
 
 	const sessionId = await getOrCreateExtensionSessionId(context);
