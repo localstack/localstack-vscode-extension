@@ -39,12 +39,9 @@ export async function createSetupStatusTracker(
 		timeout = setTimeout(() => void startChecking(), 1_000);
 	};
 
-	await timeTracker.run(
-		"setup-status.checkIsSetupRequired",
-		async () => {
-			await startChecking();
-		},
-	);
+	await timeTracker.run("setup-status.checkIsSetupRequired", async () => {
+		await startChecking();
+	});
 
 	return {
 		status() {
