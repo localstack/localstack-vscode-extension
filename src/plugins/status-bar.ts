@@ -5,6 +5,7 @@ import { createPlugin } from "../plugins.ts";
 import { checkIsProfileConfigured } from "../utils/configure-aws.ts";
 
 export default createPlugin(
+	"status-bar",
 	({ context, statusBarItem, localStackStatusTracker, setupStatusTracker }) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.showCommands", async () => {

@@ -5,6 +5,7 @@ import type {
 	ContainerStatusTracker,
 } from "./container-status.ts";
 import { createEmitter } from "./emitter.ts";
+import type { TimeTracker } from "./time-tracker.ts";
 
 export type LocalStackStatus = "starting" | "running" | "stopping" | "stopped";
 
@@ -19,6 +20,7 @@ export interface LocalStackStatusTracker extends Disposable {
 export async function createLocalStackStatusTracker(
 	containerStatusTracker: ContainerStatusTracker,
 	outputChannel: LogOutputChannel,
+	timeTracker: TimeTracker,
 ): Promise<LocalStackStatusTracker> {
 	let status: LocalStackStatus | undefined;
 	const emitter = createEmitter<LocalStackStatus>(outputChannel);
@@ -46,7 +48,10 @@ export async function createLocalStackStatusTracker(
 		updateStatus();
 		healthCheckTimeout = setTimeout(() => void startHealthCheck(), 1_000);
 	};
-	await startHealthCheck();
+
+	await timeTracker.run("localstack-status.healthCheck", async () => {
+		await startHealthCheck();
+	});
 
 	return {
 		status() {

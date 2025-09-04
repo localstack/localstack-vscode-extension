@@ -1,3 +1,4 @@
+import ms from "ms";
 import { StatusBarAlignment, window } from "vscode";
 import type { ExtensionContext } from "vscode";
 
@@ -13,6 +14,7 @@ import { createLocalStackStatusTracker } from "./utils/localstack-status.ts";
 import { getOrCreateExtensionSessionId } from "./utils/manage.ts";
 import { createSetupStatusTracker } from "./utils/setup-status.ts";
 import { createTelemetry } from "./utils/telemetry.ts";
+import { createTimeTracker } from "./utils/time-tracker.ts";
 
 const plugins = new PluginManager([
 	setup,
@@ -29,36 +31,83 @@ export async function activate(context: ExtensionContext) {
 	});
 	context.subscriptions.push(outputChannel);
 
-	const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, -1);
-	context.subscriptions.push(statusBarItem);
-	statusBarItem.text = "$(loading~spin) LocalStack";
-	statusBarItem.show();
+	const timeTracker = createTimeTracker({ outputChannel });
 
-	const containerStatusTracker = await createContainerStatusTracker(
-		"localstack-main",
-		outputChannel,
-	);
-	context.subscriptions.push(containerStatusTracker);
-
-	const localStackStatusTracker = await createLocalStackStatusTracker(
-		containerStatusTracker,
-		outputChannel,
-	);
-	context.subscriptions.push(localStackStatusTracker);
-
-	const setupStatusTracker = await createSetupStatusTracker(outputChannel);
-
-	const sessionId = await getOrCreateExtensionSessionId(context);
-	const telemetry = createTelemetry(outputChannel, sessionId);
-
-	await plugins.activate({
-		context,
-		outputChannel,
-		statusBarItem,
+	const {
 		containerStatusTracker,
 		localStackStatusTracker,
 		setupStatusTracker,
+		statusBarItem,
 		telemetry,
+	} = await timeTracker.run("extension.dependencies", async () => {
+		const statusBarItem = window.createStatusBarItem(
+			StatusBarAlignment.Left,
+			-1,
+		);
+		context.subscriptions.push(statusBarItem);
+		statusBarItem.text = "$(loading~spin) LocalStack";
+		statusBarItem.show();
+
+		const containerStatusTracker = await createContainerStatusTracker(
+			"localstack-main",
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(containerStatusTracker);
+
+		const localStackStatusTracker = await createLocalStackStatusTracker(
+			containerStatusTracker,
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(localStackStatusTracker);
+
+		outputChannel.trace(`[setup-status]: Starting...`);
+		const startStatusTracker = Date.now();
+		const setupStatusTracker = await createSetupStatusTracker(
+			outputChannel,
+			timeTracker,
+		);
+		context.subscriptions.push(setupStatusTracker);
+		const endStatusTracker = Date.now();
+		outputChannel.trace(
+			`[setup-status]: Completed in ${ms(
+				endStatusTracker - startStatusTracker,
+				{ long: true },
+			)}`,
+		);
+
+		const startTelemetry = Date.now();
+		outputChannel.trace(`[telemetry]: Starting...`);
+		const sessionId = await getOrCreateExtensionSessionId(context);
+		const telemetry = createTelemetry(outputChannel, sessionId);
+		const endTelemetry = Date.now();
+		outputChannel.trace(
+			`[telemetry]: Completed in ${ms(endTelemetry - startTelemetry, {
+				long: true,
+			})}`,
+		);
+
+		return {
+			statusBarItem,
+			containerStatusTracker,
+			localStackStatusTracker,
+			setupStatusTracker,
+			telemetry,
+		};
+	});
+
+	await timeTracker.run("extension.activatePlugins", async () => {
+		await plugins.activate({
+			context,
+			outputChannel,
+			statusBarItem,
+			containerStatusTracker,
+			localStackStatusTracker,
+			setupStatusTracker,
+			telemetry,
+			timeTracker,
+		});
 	});
 }
 

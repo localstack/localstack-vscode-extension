@@ -5,6 +5,7 @@ import * as z from "zod/v4-mini";
 
 import { createEmitter } from "./emitter.ts";
 import { JsonLinesStream } from "./json-lines-stream.ts";
+import type { TimeTracker } from "./time-tracker.ts";
 
 export type ContainerStatus = "running" | "stopping" | "stopped";
 
@@ -19,6 +20,7 @@ export interface ContainerStatusTracker extends Disposable {
 export async function createContainerStatusTracker(
 	containerName: string,
 	outputChannel: LogOutputChannel,
+	timeTracker: TimeTracker,
 ): Promise<ContainerStatusTracker> {
 	let status: ContainerStatus | undefined;
 	const emitter = createEmitter<ContainerStatus>(outputChannel);
@@ -34,9 +36,11 @@ export async function createContainerStatusTracker(
 		},
 	);
 
-	await getContainerStatus(containerName).then((newStatus) => {
-		status ??= newStatus;
-		void emitter.emit(status);
+	await timeTracker.run("container-status.getContainerStatus", async () => {
+		await getContainerStatus(containerName).then((newStatus) => {
+			status ??= newStatus;
+			void emitter.emit(status);
+		});
 	});
 
 	return {
@@ -77,7 +81,9 @@ function listenToContainerStatus(
 	const startListening = () => {
 		if (isDisposed) return;
 
-		outputChannel.debug("Spawning 'docker events'...");
+		outputChannel.debug(
+			"[container-status.listenToContainerStatus] Spawning 'docker events'...",
+		);
 
 		try {
 			dockerEvents = spawn("docker", [
