@@ -1,3 +1,4 @@
+import ms from "ms";
 import { StatusBarAlignment, window } from "vscode";
 import type { ExtensionContext } from "vscode";
 
@@ -13,6 +14,7 @@ import { createLocalStackStatusTracker } from "./utils/localstack-status.ts";
 import { getOrCreateExtensionSessionId } from "./utils/manage.ts";
 import { createSetupStatusTracker } from "./utils/setup-status.ts";
 import { createTelemetry } from "./utils/telemetry.ts";
+import { createTimeTracker } from "./utils/time-tracker.ts";
 
 const plugins = new PluginManager([
 	setup,
@@ -24,10 +26,16 @@ const plugins = new PluginManager([
 ]);
 
 export async function activate(context: ExtensionContext) {
+	const startDependencies = Date.now();
+
 	const outputChannel = window.createOutputChannel("LocalStack", {
 		log: true,
 	});
 	context.subscriptions.push(outputChannel);
+
+	outputChannel.trace(`[extension]: Creating dependencies...`);
+
+	const timeTracker = createTimeTracker({ outputChannel });
 
 	const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, -1);
 	context.subscriptions.push(statusBarItem);
@@ -93,7 +101,12 @@ export async function activate(context: ExtensionContext) {
 		localStackStatusTracker,
 		setupStatusTracker,
 		telemetry,
+		timeTracker,
 	});
+	const endPlugins = Date.now();
+	outputChannel.trace(
+		`[extension]: Plugins activated in ${ms(endPlugins - startPlugins, { long: true })}`,
+	);
 }
 
 export async function deactivate() {
