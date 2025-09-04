@@ -83,13 +83,19 @@ function getLocalStackStatus(
 }
 
 async function fetchHealth(): Promise<boolean> {
-	// health is ok in the majority of use cases, however, determining status based on it can be flaky.
-	// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
-	// though we don't know if it happens often.
+	// Abort the fetch if it takes more than 500ms.
+	const controller = new AbortController();
+	setTimeout(() => controller.abort(), 500);
+
 	try {
-		const response = await fetch("http://localhost:4566/_localstack/health");
+		// health is ok in the majority of use cases, however, determining status based on it can be flaky.
+		// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
+		// though we don't know if it happens often.
+		const response = await fetch("http://localhost:4566/_localstack/health", {
+			signal: controller.signal,
+		});
 		return response.ok;
-	} catch {
+	} catch (err) {
 		return false;
 	}
 }
