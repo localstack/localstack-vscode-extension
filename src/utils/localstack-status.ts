@@ -49,7 +49,7 @@ export async function createLocalStackStatusTracker(
 		healthCheckTimeout = setTimeout(() => void startHealthCheck(), 1_000);
 	};
 
-	await timeTracker.run("healthCheck", async () => {
+	await timeTracker.run("localstack-status.healthCheck", async () => {
 		await startHealthCheck();
 	});
 

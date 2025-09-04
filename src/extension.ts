@@ -37,20 +37,54 @@ export async function activate(context: ExtensionContext) {
 	const containerStatusTracker = await createContainerStatusTracker(
 		"localstack-main",
 		outputChannel,
+		timeTracker,
 	);
 	context.subscriptions.push(containerStatusTracker);
 
 	const localStackStatusTracker = await createLocalStackStatusTracker(
 		containerStatusTracker,
 		outputChannel,
+		timeTracker,
 	);
 	context.subscriptions.push(localStackStatusTracker);
 
-	const setupStatusTracker = await createSetupStatusTracker(outputChannel);
+	outputChannel.trace(`[setup-status-tracker]: Starting...`);
+	const startStatusTracker = Date.now();
+	const setupStatusTracker = await createSetupStatusTracker(
+		outputChannel,
+		timeTracker,
+	);
+	context.subscriptions.push(setupStatusTracker);
+	const endStatusTracker = Date.now();
+	outputChannel.trace(
+		`[setup-status-tracker]: Completed in ${ms(
+			endStatusTracker - startStatusTracker,
+			{ long: true },
+		)}`,
+	);
 
+	const startTelemetry = Date.now();
+	outputChannel.trace(`[telemetry]: Starting...`);
 	const sessionId = await getOrCreateExtensionSessionId(context);
 	const telemetry = createTelemetry(outputChannel, sessionId);
+	const endTelemetry = Date.now();
+	outputChannel.trace(
+		`[telemetry]: Completed in ${ms(endTelemetry - startTelemetry, {
+			long: true,
+		})}`,
+	);
 
+	const endDependencies = Date.now();
+	outputChannel.trace(
+		`[extension]: Dependencies created in ${ms(
+			endDependencies - startDependencies,
+			{
+				long: true,
+			},
+		)}`,
+	);
+
+	const startPlugins = Date.now();
 	await plugins.activate({
 		context,
 		outputChannel,

@@ -59,13 +59,13 @@ export class PluginManager {
 		for (const activate of this.plugins) {
 			const startPlugin = Date.now();
 			options.outputChannel.trace(
-				`[plugin-manager]: Activating plugin "${activate.name}"...`,
+				`[extension.plugins]: Activating plugin "${activate.name}"...`,
 			);
 			const deactivatable = await activate.factory(options);
 			this.deactivatables.push(deactivatable);
 			const endPlugin = Date.now();
 			options.outputChannel.trace(
-				`[plugin-manager]: Activated plugin "${activate.name}" in ${ms(
+				`[extension.plugins]: Activated plugin "${activate.name}" in ${ms(
 					endPlugin - startPlugin,
 					{ long: true },
 				)}`,

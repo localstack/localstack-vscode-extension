@@ -36,7 +36,7 @@ export async function createContainerStatusTracker(
 		},
 	);
 
-	await timeTracker.run("getContainerStatus", async () => {
+	await timeTracker.run("container-status.getContainerStatus", async () => {
 		await getContainerStatus(containerName).then((newStatus) => {
 			status ??= newStatus;
 			void emitter.emit(status);
