@@ -40,7 +40,7 @@ export async function createSetupStatusTracker(
 	};
 
 	await timeTracker.run(
-		"setup-status-tracker.checkIsSetupRequired",
+		"setup-status.checkIsSetupRequired",
 		async () => {
 			await startChecking();
 		},
