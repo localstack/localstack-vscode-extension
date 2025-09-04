@@ -2,9 +2,9 @@ import { v7 as uuidv7 } from "uuid";
 import type { ExtensionContext, LogOutputChannel, MessageItem } from "vscode";
 import { commands, env, Uri, window } from "vscode";
 
-import { checkIsLicenseValid } from "./authenticate.ts";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
+import { checkIsLicenseValid } from "./license.ts";
 import type { Telemetry } from "./telemetry.ts";
 
 export type LocalstackStatus = "running" | "starting" | "stopping" | "stopped";

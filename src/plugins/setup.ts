@@ -1,16 +1,18 @@
 import { commands, ProgressLocation, window } from "vscode";
-import type { LogOutputChannel } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
 import {
 	checkIsAuthenticated,
-	checkIsLicenseValid,
 	requestAuthentication,
 	saveAuthToken,
 } from "../utils/authenticate.ts";
-import { execLocalStack } from "../utils/cli.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
+import {
+	activateLicense,
+	checkIsLicenseValid,
+	activateLicenseUntilValid,
+} from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
 
 export default createPlugin(
@@ -172,9 +174,7 @@ export default createPlugin(
 							// then there will be no license info to be reported by `localstack license info`.
 							// Also, an expired license could be cached.
 							// Activating the license pre-emptively to know its state during the setup process.
-							await execLocalStack(["license", "activate"], {
-								outputChannel,
-							});
+							await activateLicense(outputChannel);
 							const licenseIsValid = await minDelay(
 								checkIsLicenseValid(outputChannel),
 							);
@@ -190,7 +190,7 @@ export default createPlugin(
 
 								commands.executeCommand("localstack.openLicensePage");
 
-								await checkLicenseUntilValid(outputChannel);
+								await activateLicenseUntilValid(outputChannel);
 							}
 							//TODO add telemetry
 
@@ -252,19 +252,3 @@ export default createPlugin(
 		}
 	},
 );
-
-async function checkLicenseUntilValid(
-	outputChannel: LogOutputChannel,
-): Promise<void> {
-	while (true) {
-		const licenseIsValid = await checkIsLicenseValid(outputChannel);
-		if (licenseIsValid) {
-			break;
-		}
-		await execLocalStack(["license", "activate"], {
-			outputChannel,
-		});
-		// Wait before trying again
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-	}
-}
