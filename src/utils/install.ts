@@ -64,7 +64,7 @@ export async function runInstallProcess(
 			payload: {
 				namespace: "onboarding",
 				origin: origin_trigger,
-				position: 1,
+				step_order: 1,
 				started_at: startedAt,
 				ended_at: new Date().toISOString(),
 				status: "SKIPPED",
@@ -152,7 +152,7 @@ export async function runInstallProcess(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							position: 1,
+							step_order: 1,
 							started_at: startedAt,
 							ended_at: new Date().toISOString(),
 							status: "FAILED",
@@ -181,7 +181,7 @@ export async function runInstallProcess(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							position: 1,
+							step_order: 1,
 							started_at: startedAt,
 							ended_at: new Date().toISOString(),
 							status: "FAILED",
@@ -198,7 +198,7 @@ export async function runInstallProcess(
 			payload: {
 				namespace: "onboarding",
 				origin: origin_trigger,
-				position: 1,
+				step_order: 1,
 				started_at: startedAt,
 				ended_at: new Date().toISOString(),
 				status: "COMPLETED",
