@@ -192,8 +192,16 @@ export default createPlugin(
 
 								commands.executeCommand("localstack.openLicensePage");
 
-								await activateLicenseUntilValid(outputChannel);
+								await activateLicenseUntilValid(
+									outputChannel,
+									cancellationToken,
+								);
 							}
+
+							if (cancellationToken.isCancellationRequested) {
+								return;
+							}
+
 							//TODO add telemetry
 
 							/////////////////////////////////////////////////////////////////////

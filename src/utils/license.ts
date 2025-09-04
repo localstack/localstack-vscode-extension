@@ -1,4 +1,4 @@
-import type { LogOutputChannel } from "vscode";
+import type { CancellationToken, LogOutputChannel } from "vscode";
 
 import { execLocalStack } from "./cli.ts";
 
@@ -29,8 +29,12 @@ export async function activateLicense(outputChannel: LogOutputChannel) {
 
 export async function activateLicenseUntilValid(
 	outputChannel: LogOutputChannel,
+	cancellationToken: CancellationToken,
 ): Promise<void> {
 	while (true) {
+		if (cancellationToken.isCancellationRequested) {
+			break;
+		}
 		const licenseIsValid = await checkIsLicenseValid(outputChannel);
 		if (licenseIsValid) {
 			break;
