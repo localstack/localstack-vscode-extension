@@ -1,4 +1,4 @@
-import { commands } from "vscode";
+import { commands, window } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
 import {
@@ -9,7 +9,7 @@ import {
 
 export default createPlugin(
 	"manage",
-	({ context, outputChannel, telemetry }) => {
+	({ context, outputChannel, telemetry, localStackStatusTracker }) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.viewLogs", () => {
 				outputChannel.show(true);
@@ -18,12 +18,22 @@ export default createPlugin(
 
 		context.subscriptions.push(
 			commands.registerCommand("localstack.start", () => {
+				if (localStackStatusTracker.status() !== "stopped") {
+					window.showInformationMessage("LocalStack is already running.");
+					return;
+				}
+				localStackStatusTracker.forceStarting();
 				void startLocalStack(outputChannel, telemetry);
 			}),
 		);
 
 		context.subscriptions.push(
 			commands.registerCommand("localstack.stop", () => {
+				if (localStackStatusTracker.status() !== "running") {
+					window.showInformationMessage("LocalStack is not running.");
+					return;
+				}
+				localStackStatusTracker.forceStopping();
 				void stopLocalStack(outputChannel, telemetry);
 			}),
 		);

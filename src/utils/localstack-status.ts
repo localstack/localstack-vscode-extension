@@ -34,7 +34,6 @@ export async function createLocalStackStatusTracker(
 	const setStatus = (newStatus: LocalStackStatus) => {
 		if (status !== newStatus) {
 			status = newStatus;
-			outputChannel.debug(`[localstack.status]: ${status}`);
 			void emitter.emit(status);
 		}
 	};
