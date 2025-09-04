@@ -11,6 +11,7 @@ import {
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
 import { minDelay } from "../utils/promises.ts";
+import {execLocalStack} from "../utils/cli.ts";
 
 export default createPlugin(
 	({ context, outputChannel, setupStatusTracker, telemetry }) => {
@@ -167,7 +168,9 @@ export default createPlugin(
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
 
-							//TODO try to activate the license first
+                            const licenseActivateResponse = await execLocalStack(["license", "activate"], {
+                                outputChannel,
+                            });
 
 							const licenseIsValid = await minDelay(
 								checkIsLicenseValid(outputChannel),
@@ -252,7 +255,9 @@ async function checkLicenseUntilValid(
 		if (licenseIsValid) {
 			break;
 		}
-		//TODO try to activate the license
+        const licenseActivateResponse = await execLocalStack(["license", "activate"], {
+            outputChannel,
+        });
 
 		// Wait 2 seconds before trying again
 		await new Promise((resolve) => setTimeout(resolve, 2000));
