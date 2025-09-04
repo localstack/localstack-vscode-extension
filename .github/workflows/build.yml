@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,22 @@ jobs:
 
       - name: Lint
         run: npx eslint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Type check
         run: npx tsc
