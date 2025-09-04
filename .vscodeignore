@@ -17,3 +17,5 @@ out/test/**
 build/**
 makefile
 docs/images/**
+CODEOWNERS
+Makefile
