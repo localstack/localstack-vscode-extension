@@ -1,5 +1,3 @@
-import os from "node:os";
-
 import { commands, ProgressLocation, window } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
@@ -10,6 +8,11 @@ import {
 } from "../utils/authenticate.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
+import {
+	activateLicense,
+	checkIsLicenseValid,
+	activateLicenseUntilValid,
+} from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
 
 export default createPlugin(
@@ -122,8 +125,6 @@ export default createPlugin(
 								progress.report({
 									message:
 										"Waiting for authentication response from the browser...",
-									// message: "Waiting for browser response...",
-									// message: "Waiting for authentication response...",
 								});
 								const { authToken } = await minDelay(
 									requestAuthentication(context, cancellationToken),
@@ -146,7 +147,6 @@ export default createPlugin(
 
 								/////////////////////////////////////////////////////////////////////
 								progress.report({
-									// message: "Authenticating...",
 									message: "Authenticating to file...",
 								});
 								await minDelay(saveAuthToken(authToken, outputChannel));
@@ -167,6 +167,38 @@ export default createPlugin(
 									return;
 								}
 							}
+
+							/////////////////////////////////////////////////////////////////////
+							progress.report({ message: "Checking LocalStack license..." });
+
+							// If an auth token has just been obtained or LocalStack has never been started,
+							// then there will be no license info to be reported by `localstack license info`.
+							// Also, an expired license could be cached.
+							// Activating the license pre-emptively to know its state during the setup process.
+							const licenseIsValid = await minDelay(
+								activateLicense(outputChannel).then(() =>
+									checkIsLicenseValid(outputChannel),
+								),
+							);
+							if (!licenseIsValid) {
+								progress.report({
+									message:
+										"License is not valid or not assigned. Open License settings page to activate it.",
+								});
+
+								commands.executeCommand("localstack.openLicensePage");
+
+								await activateLicenseUntilValid(
+									outputChannel,
+									cancellationToken,
+								);
+							}
+
+							if (cancellationToken.isCancellationRequested) {
+								return;
+							}
+
+							//TODO add telemetry
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({

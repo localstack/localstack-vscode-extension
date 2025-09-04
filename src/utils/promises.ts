@@ -1,9 +1,9 @@
 import pMinDelay from "p-min-delay";
 
 /**
- * Setting up a minimum wait time of 1s allows users
+ * Setting up a minimum wait time allows users
  * to visually grasp the text before it goes away, if
- * the task was fast (less than 0.5s).
+ * the task was faster than the minimum wait time.
  */
 const MIN_TIME_BETWEEN_STEPS_MS = 500;
 

@@ -2,9 +2,9 @@ import { v7 as uuidv7 } from "uuid";
 import type { ExtensionContext, LogOutputChannel, MessageItem } from "vscode";
 import { commands, env, Uri, window } from "vscode";
 
-import { checkIsLicenseValid } from "./authenticate.ts";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
+import { checkIsLicenseValid } from "./license.ts";
 import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
 
@@ -199,7 +199,12 @@ export async function stopLocalStack(
 
 export async function openLicensePage() {
 	const url = new URL("https://app.localstack.cloud/settings/auth-tokens");
-	await env.openExternal(Uri.parse(url.toString()));
+	const openSuccessful = await env.openExternal(Uri.parse(url.toString()));
+	if (!openSuccessful) {
+		window.showErrorMessage(
+			`Open LocalStack License page in browser by entering the URL manually: ${url.toString()}`,
+		);
+	}
 }
 
 async function showInformationMessage(
