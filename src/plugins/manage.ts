@@ -11,12 +11,6 @@ export default createPlugin(
 	"manage",
 	({ context, outputChannel, telemetry, localStackStatusTracker }) => {
 		context.subscriptions.push(
-			commands.registerCommand("localstack.viewLogs", () => {
-				outputChannel.show(true);
-			}),
-		);
-
-		context.subscriptions.push(
 			commands.registerCommand("localstack.start", async () => {
 				if (localStackStatusTracker.status() !== "stopped") {
 					window.showInformationMessage("LocalStack is already running.");

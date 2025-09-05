@@ -1,12 +1,20 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 
+import { commands } from "vscode";
+
 import { createPlugin } from "../plugins.ts";
 import { pipeToLogOutputChannel } from "../utils/spawn.ts";
 
 export default createPlugin(
 	"logs",
 	({ context, outputChannel, containerStatusTracker }) => {
+		context.subscriptions.push(
+			commands.registerCommand("localstack.viewLogs", () => {
+				outputChannel.show(true);
+			}),
+		);
+
 		let logsProcess: ChildProcess | undefined;
 
 		const startLogging = () => {

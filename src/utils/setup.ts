@@ -5,9 +5,7 @@ import { checkIsProfileConfigured } from "./configure-aws.ts";
 import { checkLocalstackInstalled } from "./install.ts";
 import { checkIsLicenseValid } from "./license.ts";
 
-export async function checkIsSetupRequired(
-	outputChannel: LogOutputChannel,
-): Promise<boolean> {
+export async function checkSetupStatus(outputChannel: LogOutputChannel) {
 	const [isInstalled, isAuthenticated, isLicenseValid, isProfileConfigured] =
 		await Promise.all([
 			checkLocalstackInstalled(outputChannel),
@@ -16,7 +14,10 @@ export async function checkIsSetupRequired(
 			checkIsProfileConfigured(),
 		]);
 
-	return (
-		!isInstalled || !isAuthenticated || !isLicenseValid || !isProfileConfigured
-	);
+	return {
+		isInstalled,
+		isAuthenticated,
+		isLicenseValid,
+		isProfileConfigured,
+	};
 }

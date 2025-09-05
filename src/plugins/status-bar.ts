@@ -2,35 +2,30 @@ import { commands, QuickPickItemKind, ThemeColor, window } from "vscode";
 import type { QuickPickItem } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
-import { checkIsProfileConfigured } from "../utils/configure-aws.ts";
+import { checkLocalstackInstalled } from "../utils/install.ts";
 
 export default createPlugin(
 	"status-bar",
-	({ context, statusBarItem, localStackStatusTracker, setupStatusTracker }) => {
+	({
+		context,
+		statusBarItem,
+		localStackStatusTracker,
+		setupStatusTracker,
+		outputChannel,
+	}) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.showCommands", async () => {
-				const getCommands = async () => {
-					const commands: (QuickPickItem & { command: string })[] = [];
-					commands.push({
-						label: "Manage",
-						command: "",
-						kind: QuickPickItemKind.Separator,
-					});
-					const setupStatus = setupStatusTracker.status();
+				const shouldShowLocalStackStart = () =>
+					setupStatusTracker.statuses().isInstalled &&
+					localStackStatusTracker.status() === "stopped";
+				const shouldShowLocalStackStop = () =>
+					setupStatusTracker.statuses().isInstalled &&
+					localStackStatusTracker.status() === "running";
+				const shouldShowRunSetupWizard = () =>
+					setupStatusTracker.status() === "setup_required";
 
-					if (setupStatus === "ok") {
-						if (localStackStatusTracker.status() === "stopped") {
-							commands.push({
-								label: "Start LocalStack",
-								command: "localstack.start",
-							});
-						} else {
-							commands.push({
-								label: "Stop LocalStack",
-								command: "localstack.stop",
-							});
-						}
-					}
+				const getCommands = () => {
+					const commands: (QuickPickItem & { command: string })[] = [];
 
 					commands.push({
 						label: "Configure",
@@ -38,33 +33,37 @@ export default createPlugin(
 						kind: QuickPickItemKind.Separator,
 					});
 
-					if (setupStatus === "setup_required") {
+					if (shouldShowRunSetupWizard()) {
 						commands.push({
-							label: "Run LocalStack setup Wizard",
+							label: "Run LocalStack Setup Wizard",
 							command: "localstack.setup",
 						});
-
-						// show start command if stopped or stop command when running, even if setup_required (in authentication, or profile)
-						if (localStackStatusTracker.status() === "stopped") {
-							commands.push({
-								label: "Start LocalStack",
-								command: "localstack.start",
-							});
-						} else if (localStackStatusTracker.status() === "running") {
-							commands.push({
-								label: "Stop LocalStack",
-								command: "localstack.stop",
-							});
-						}
 					}
 
-					const isProfileConfigured = await checkIsProfileConfigured();
-					if (!isProfileConfigured) {
+					commands.push({
+						label: "Manage",
+						command: "",
+						kind: QuickPickItemKind.Separator,
+					});
+
+					if (shouldShowLocalStackStart()) {
 						commands.push({
-							label: "Configure AWS Profiles",
-							command: "localstack.configureAwsProfiles",
+							label: "Start LocalStack",
+							command: "localstack.start",
 						});
 					}
+
+					if (shouldShowLocalStackStop()) {
+						commands.push({
+							label: "Stop LocalStack",
+							command: "localstack.stop",
+						});
+					}
+
+					commands.push({
+						label: "View Logs",
+						command: "localstack.viewLogs",
+					});
 
 					return commands;
 				};
@@ -74,7 +73,7 @@ export default createPlugin(
 				});
 
 				if (selected) {
-					commands.executeCommand(selected.command);
+					void commands.executeCommand(selected.command);
 				}
 			}),
 		);
@@ -82,30 +81,30 @@ export default createPlugin(
 		context.subscriptions.push(
 			commands.registerCommand("localstack.refreshStatusBar", () => {
 				const setupStatus = setupStatusTracker.status();
+				const localStackStatus = localStackStatusTracker.status();
+				const localStackInstalled = setupStatusTracker.statuses().isInstalled;
 
-				if (setupStatus === "setup_required") {
-					statusBarItem.command = "localstack.showCommands";
-					statusBarItem.text = "$(error) LocalStack";
-					statusBarItem.backgroundColor = new ThemeColor(
-						"statusBarItem.errorBackground",
-					);
-				} else {
-					statusBarItem.command = "localstack.showCommands";
-					statusBarItem.backgroundColor = undefined;
-					const localStackStatus = localStackStatusTracker.status();
-					if (
-						localStackStatus === "starting" ||
-						localStackStatus === "stopping"
-					) {
-						statusBarItem.text = `$(sync~spin) LocalStack (${localStackStatus})`;
-					} else if (
-						localStackStatus === "running" ||
-						localStackStatus === "stopped"
-					) {
-						statusBarItem.text = `$(localstack-logo) LocalStack (${localStackStatus})`;
-					}
-				}
+				statusBarItem.command = "localstack.showCommands";
+				statusBarItem.backgroundColor =
+					setupStatus === "setup_required"
+						? new ThemeColor("statusBarItem.errorBackground")
+						: undefined;
 
+				const shouldSpin =
+					localStackStatus === "starting" || localStackStatus === "stopping";
+				const icon =
+					setupStatus === "setup_required"
+						? "$(error)"
+						: shouldSpin
+							? "$(sync~spin)"
+							: "$(localstack-logo)";
+
+				const statusText = localStackInstalled
+					? `${localStackStatus}`
+					: "not installed";
+				statusBarItem.text = `${icon} LocalStack: ${statusText}`;
+
+				statusBarItem.tooltip = "Show LocalStack commands";
 				statusBarItem.show();
 			}),
 		);
@@ -119,6 +118,7 @@ export default createPlugin(
 				});
 			}
 		};
+
 		context.subscriptions.push({
 			dispose() {
 				clearImmediate(refreshStatusBarImmediateId);
@@ -128,10 +128,12 @@ export default createPlugin(
 		refreshStatusBarImmediate();
 
 		localStackStatusTracker.onChange(() => {
+			outputChannel.trace("[status-bar]: localStackStatusTracker changed");
 			refreshStatusBarImmediate();
 		});
 
 		setupStatusTracker.onChange(() => {
+			outputChannel.trace("[status-bar]: setupStatusTracker changed");
 			refreshStatusBarImmediate();
 		});
 	},
