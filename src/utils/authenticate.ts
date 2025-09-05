@@ -22,7 +22,10 @@ import { assertIsError } from "./assert.ts";
 export async function requestAuthentication(
 	context: ExtensionContext,
 	cancellationToken?: CancellationToken,
-): Promise<{ authToken: string }> {
+): Promise<
+	| { authToken: string; cancelled?: undefined }
+	| { authToken?: undefined; cancelled: true }
+> {
 	return new Promise((resolve, reject) => {
 		const uriHandler = window.registerUriHandler({
 			handleUri: (uri: Uri) => {
@@ -34,7 +37,7 @@ export async function requestAuthentication(
 				if (authToken) {
 					resolve({ authToken });
 				} else {
-					window.showErrorMessage("No token found in URI.");
+					void window.showErrorMessage("No token found in URI.");
 					reject(new Error("No token found in URI"));
 				}
 			},
@@ -42,14 +45,19 @@ export async function requestAuthentication(
 		context.subscriptions.push(uriHandler);
 		cancellationToken?.onCancellationRequested(() => {
 			uriHandler.dispose();
-			reject(new Error("Authentication cancelled"));
+			resolve({ cancelled: true });
 		});
 
-		void redirectToLocalStack();
+		void redirectToLocalStack().then(({ cancelled }) => {
+			if (cancelled) {
+				uriHandler.dispose();
+				resolve({ cancelled: true });
+			}
+		});
 	});
 }
 
-async function redirectToLocalStack() {
+async function redirectToLocalStack(): Promise<{ cancelled: boolean }> {
 	// You don't have to get the Uri from the `env.asExternalUri` API but it will add a query
 	// parameter (ex: "windowId%3D14") that will help VS Code decide which window to redirect to.
 	// If this query parameter isn't specified, VS Code will pick the last windows that was focused.
@@ -63,13 +71,17 @@ async function redirectToLocalStack() {
 	const url = new URL(process.env.LOCALSTACK_WEB_AUTH_REDIRECT!);
 	url.searchParams.set("windowId", redirectSearchParams.get("windowId") ?? "");
 
-	const openSuccessful = await env.openExternal(Uri.parse(url.toString()));
-
-	if (!openSuccessful) {
-		window.showErrorMessage(
-			`Open LocalStack sign-in URL in browser by entering the URL manually: ${url.toString()}`,
-		);
+	const selection = await window.showInformationMessage(
+		`LocalStack needs to open the browser to continue with the authentication process.`,
+		{ modal: true },
+		"Continue",
+	);
+	if (!selection) {
+		return { cancelled: true };
 	}
+
+	const openSuccessful = await env.openExternal(Uri.parse(url.toString()));
+	return { cancelled: !openSuccessful };
 }
 
 const LOCALSTACK_AUTH_FILENAME = `${os.homedir()}/.localstack/auth.json`;
