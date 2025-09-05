@@ -5,6 +5,7 @@ import * as path from "node:path";
 
 import { window } from "vscode";
 
+import { readAuthToken } from "./authenticate.ts";
 import { parseIni, serializeIni, updateIniSection } from "./ini-parser.ts";
 import type { IniFile, IniSection } from "./ini-parser.ts";
 import type { Telemetry } from "./telemetry.ts";
@@ -296,6 +297,8 @@ export async function configureAwsProfiles(options: {
 	const credentialsNeedsOverride =
 		checkIfCredentialsNeedsOverride(credentialsSection);
 
+	const authToken = await readAuthToken();
+
 	// means sections exist, but we need to check what's inside
 	if (credentialsSection && configSection) {
 		if (!configNeedsOverride && !credentialsNeedsOverride) {
@@ -310,10 +313,11 @@ export async function configureAwsProfiles(options: {
 				payload: {
 					namespace: "onboarding",
 					origin: trigger,
-					position: 3,
+					step_order: 4,
 					started_at: startedAt,
 					ended_at: new Date().toISOString(),
 					status: "COMPLETED",
+					auth_token: authToken,
 				},
 			});
 			return;
@@ -343,10 +347,11 @@ export async function configureAwsProfiles(options: {
 			payload: {
 				namespace: "onboarding",
 				origin: trigger,
-				position: 3,
+				step_order: 4,
 				started_at: startedAt,
 				ended_at: new Date().toISOString(),
 				status: "SKIPPED",
+				auth_token: authToken,
 			},
 		});
 		return;
@@ -376,10 +381,11 @@ export async function configureAwsProfiles(options: {
 				payload: {
 					namespace: "onboarding",
 					origin: trigger,
-					position: 3,
+					step_order: 4,
 					started_at: startedAt,
 					ended_at: new Date().toISOString(),
 					status: "COMPLETED",
+					auth_token: authToken,
 				},
 			});
 		} else if (configNeedsOverride) {
@@ -398,10 +404,11 @@ export async function configureAwsProfiles(options: {
 				payload: {
 					namespace: "onboarding",
 					origin: trigger,
-					position: 3,
+					step_order: 4,
 					started_at: startedAt,
 					ended_at: new Date().toISOString(),
 					status: "COMPLETED",
+					auth_token: authToken,
 				},
 			});
 		} else if (credentialsNeedsOverride) {
@@ -420,10 +427,11 @@ export async function configureAwsProfiles(options: {
 				payload: {
 					namespace: "onboarding",
 					origin: trigger,
-					position: 3,
+					step_order: 4,
 					started_at: startedAt,
 					ended_at: new Date().toISOString(),
 					status: "COMPLETED",
+					auth_token: authToken,
 				},
 			});
 		}
