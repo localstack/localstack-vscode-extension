@@ -15,16 +15,16 @@ export default createPlugin(
 	}) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.showCommands", async () => {
-				const shouldShowLocalStackStart = async () =>
-					(await checkLocalstackInstalled(outputChannel)) &&
+				const shouldShowLocalStackStart = () =>
+					setupStatusTracker.statuses().isInstalled &&
 					localStackStatusTracker.status() === "stopped";
-				const shouldShowLocalStackStop = async () =>
-					(await checkLocalstackInstalled(outputChannel)) &&
+				const shouldShowLocalStackStop = () =>
+					setupStatusTracker.statuses().isInstalled &&
 					localStackStatusTracker.status() === "running";
 				const shouldShowRunSetupWizard = () =>
 					setupStatusTracker.status() === "setup_required";
 
-				const getCommands = async () => {
+				const getCommands = () => {
 					const commands: (QuickPickItem & { command: string })[] = [];
 					commands.push({
 						label: "Manage",
@@ -32,14 +32,14 @@ export default createPlugin(
 						kind: QuickPickItemKind.Separator,
 					});
 
-					if (await shouldShowLocalStackStart()) {
+					if (shouldShowLocalStackStart()) {
 						commands.push({
 							label: "Start LocalStack",
 							command: "localstack.start",
 						});
 					}
 
-					if (await shouldShowLocalStackStop()) {
+					if (shouldShowLocalStackStop()) {
 						commands.push({
 							label: "Stop LocalStack",
 							command: "localstack.stop",
@@ -59,7 +59,7 @@ export default createPlugin(
 
 					if (shouldShowRunSetupWizard()) {
 						commands.push({
-							label: "Run LocalStack setup Wizard",
+							label: "Run LocalStack Setup Wizard",
 							command: "localstack.setup",
 						});
 					}
@@ -81,30 +81,30 @@ export default createPlugin(
 			commands.registerCommand("localstack.refreshStatusBar", () => {
 				// TODO
 				const setupStatus = setupStatusTracker.status();
+				const localStackStatus = localStackStatusTracker.status();
+				const localStackInstalled = setupStatusTracker.statuses().isInstalled;
 
-				if (setupStatus === "setup_required") {
-					statusBarItem.command = "localstack.showCommands";
-					statusBarItem.text = "$(error) LocalStack";
-					statusBarItem.backgroundColor = new ThemeColor(
-						"statusBarItem.errorBackground",
-					);
-				} else {
-					statusBarItem.command = "localstack.showCommands";
-					statusBarItem.backgroundColor = undefined;
-					const localStackStatus = localStackStatusTracker.status();
-					if (
-						localStackStatus === "starting" ||
-						localStackStatus === "stopping"
-					) {
-						statusBarItem.text = `$(sync~spin) LocalStack (${localStackStatus})`;
-					} else if (
-						localStackStatus === "running" ||
-						localStackStatus === "stopped"
-					) {
-						statusBarItem.text = `$(localstack-logo) LocalStack (${localStackStatus})`;
-					}
-				}
+				statusBarItem.command = "localstack.showCommands";
+				statusBarItem.backgroundColor =
+					setupStatus === "setup_required"
+						? new ThemeColor("statusBarItem.errorBackground")
+						: undefined;
 
+				const shouldSpin =
+					localStackStatus === "starting" || localStackStatus === "stopping";
+				const icon =
+					setupStatus === "setup_required"
+						? "$(error)"
+						: shouldSpin
+							? "$(sync~spin)"
+							: "$(localstack-logo)";
+
+				const statusText = localStackInstalled
+					? `${localStackStatus}`
+					: "not installed";
+				statusBarItem.text = `${icon} LocalStack: ${statusText}`;
+
+				statusBarItem.tooltip = "Show LocalStack commands";
 				statusBarItem.show();
 			}),
 		);
@@ -118,6 +118,7 @@ export default createPlugin(
 				});
 			}
 		};
+
 		context.subscriptions.push({
 			dispose() {
 				clearImmediate(refreshStatusBarImmediateId);
@@ -127,10 +128,12 @@ export default createPlugin(
 		refreshStatusBarImmediate();
 
 		localStackStatusTracker.onChange(() => {
+			outputChannel.trace("[status-bar]: localStackStatusTracker changed");
 			refreshStatusBarImmediate();
 		});
 
 		setupStatusTracker.onChange(() => {
+			outputChannel.trace("[status-bar]: setupStatusTracker changed");
 			refreshStatusBarImmediate();
 		});
 	},
