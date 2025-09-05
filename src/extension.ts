@@ -2,7 +2,6 @@ import ms from "ms";
 import { StatusBarAlignment, window } from "vscode";
 import type { ExtensionContext } from "vscode";
 
-import authenticate from "./plugins/authenticate.ts";
 import configureAws from "./plugins/configure-aws.ts";
 import logs from "./plugins/logs.ts";
 import manage from "./plugins/manage.ts";
@@ -18,7 +17,6 @@ import { createTimeTracker } from "./utils/time-tracker.ts";
 
 const plugins = new PluginManager([
 	setup,
-	authenticate,
 	configureAws,
 	manage,
 	statusBar,
