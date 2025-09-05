@@ -237,7 +237,7 @@ export default createPlugin(
 										auth_token: await readAuthToken(),
 										started_at: licenseCheckStartedAt,
 										ended_at: new Date().toISOString(),
-										status: "COMPLETED",
+										status: "CANCELLED",
 									},
 								});
 								return;
