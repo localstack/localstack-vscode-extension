@@ -81,11 +81,6 @@
 				"category": "LocalStack"
 			},
 			{
-				"command": "localstack.authenticate",
-				"title": "Authenticate",
-				"category": "LocalStack"
-			},
-			{
 				"command": "localstack.openLicensePage",
 				"title": "Open license page",
 				"category": "LocalStack"
