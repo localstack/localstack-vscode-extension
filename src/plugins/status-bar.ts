@@ -26,6 +26,20 @@ export default createPlugin(
 
 				const getCommands = () => {
 					const commands: (QuickPickItem & { command: string })[] = [];
+
+					commands.push({
+						label: "Configure",
+						command: "",
+						kind: QuickPickItemKind.Separator,
+					});
+
+					if (shouldShowRunSetupWizard()) {
+						commands.push({
+							label: "Run LocalStack Setup Wizard",
+							command: "localstack.setup",
+						});
+					}
+
 					commands.push({
 						label: "Manage",
 						command: "",
@@ -51,19 +65,6 @@ export default createPlugin(
 						command: "localstack.viewLogs",
 					});
 
-					commands.push({
-						label: "Configure",
-						command: "",
-						kind: QuickPickItemKind.Separator,
-					});
-
-					if (shouldShowRunSetupWizard()) {
-						commands.push({
-							label: "Run LocalStack Setup Wizard",
-							command: "localstack.setup",
-						});
-					}
-
 					return commands;
 				};
 
@@ -79,7 +80,6 @@ export default createPlugin(
 
 		context.subscriptions.push(
 			commands.registerCommand("localstack.refreshStatusBar", () => {
-				// TODO
 				const setupStatus = setupStatusTracker.status();
 				const localStackStatus = localStackStatusTracker.status();
 				const localStackInstalled = setupStatusTracker.statuses().isInstalled;
