@@ -2,15 +2,24 @@ import { commands, QuickPickItemKind, ThemeColor, window } from "vscode";
 import type { QuickPickItem } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
+import { checkLocalstackInstalled } from "../utils/install.ts";
 
 export default createPlugin(
 	"status-bar",
-	({ context, statusBarItem, localStackStatusTracker, setupStatusTracker }) => {
+	({
+		context,
+		statusBarItem,
+		localStackStatusTracker,
+		setupStatusTracker,
+		outputChannel,
+	}) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.showCommands", async () => {
-				const shouldShowLocalStackStart = () =>
+				const shouldShowLocalStackStart = async () =>
+					(await checkLocalstackInstalled(outputChannel)) &&
 					localStackStatusTracker.status() === "stopped";
-				const shouldShowLocalStackStop = () =>
+				const shouldShowLocalStackStop = async () =>
+					(await checkLocalstackInstalled(outputChannel)) &&
 					localStackStatusTracker.status() === "running";
 				const shouldShowRunSetupWizard = () =>
 					setupStatusTracker.status() === "setup_required";
@@ -23,14 +32,14 @@ export default createPlugin(
 						kind: QuickPickItemKind.Separator,
 					});
 
-					if (shouldShowLocalStackStart()) {
+					if (await shouldShowLocalStackStart()) {
 						commands.push({
 							label: "Start LocalStack",
 							command: "localstack.start",
 						});
 					}
 
-					if (shouldShowLocalStackStop()) {
+					if (await shouldShowLocalStackStop()) {
 						commands.push({
 							label: "Stop LocalStack",
 							command: "localstack.stop",
@@ -70,6 +79,7 @@ export default createPlugin(
 
 		context.subscriptions.push(
 			commands.registerCommand("localstack.refreshStatusBar", () => {
+				// TODO
 				const setupStatus = setupStatusTracker.status();
 
 				if (setupStatus === "setup_required") {
