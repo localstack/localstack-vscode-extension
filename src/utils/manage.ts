@@ -17,7 +17,7 @@ async function fetchHealth(): Promise<boolean> {
 	// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
 	// though we don't know if it happens often.
 	try {
-		const response = await fetch("http://localhost:4566/_localstack/health");
+		const response = await fetch("http://127.0.0.1:4566/_localstack/health");
 		return response.ok;
 	} catch {
 		return false;
@@ -28,7 +28,7 @@ async function fetchLocalStackSessionId(): Promise<string> {
 	try {
 		// TODO info endpoint is not available immediately
 		// potentially improve this later for tracking "vscode:emulator:started"
-		const infoResponse = await fetch("http://localhost:4566/_localstack/info");
+		const infoResponse = await fetch("http://127.0.0.1:4566/_localstack/info");
 		if (infoResponse.ok) {
 			const info = (await infoResponse.json()) as { session_id?: string };
 			return info.session_id ?? "";
