@@ -23,8 +23,8 @@ export async function requestAuthentication(
 	context: ExtensionContext,
 	cancellationToken?: CancellationToken,
 ): Promise<
-	| { authToken: string; canceled?: undefined }
-	| { authToken?: undefined; canceled: true }
+	| { authToken: string; cancelled?: undefined }
+	| { authToken?: undefined; cancelled: true }
 > {
 	return new Promise((resolve, reject) => {
 		const uriHandler = window.registerUriHandler({
@@ -45,19 +45,19 @@ export async function requestAuthentication(
 		context.subscriptions.push(uriHandler);
 		cancellationToken?.onCancellationRequested(() => {
 			uriHandler.dispose();
-			resolve({ canceled: true });
+			resolve({ cancelled: true });
 		});
 
-		void redirectToLocalStack().then(({ canceled }) => {
-			if (canceled) {
+		void redirectToLocalStack().then(({ cancelled }) => {
+			if (cancelled) {
 				uriHandler.dispose();
-				resolve({ canceled: true });
+				resolve({ cancelled: true });
 			}
 		});
 	});
 }
 
-async function redirectToLocalStack(): Promise<{ canceled: boolean }> {
+async function redirectToLocalStack(): Promise<{ cancelled: boolean }> {
 	// You don't have to get the Uri from the `env.asExternalUri` API but it will add a query
 	// parameter (ex: "windowId%3D14") that will help VS Code decide which window to redirect to.
 	// If this query parameter isn't specified, VS Code will pick the last windows that was focused.
@@ -77,11 +77,11 @@ async function redirectToLocalStack(): Promise<{ canceled: boolean }> {
 		"Continue",
 	);
 	if (!selection) {
-		return { canceled: true };
+		return { cancelled: true };
 	}
 
 	const openSuccessful = await env.openExternal(Uri.parse(url.toString()));
-	return { canceled: !openSuccessful };
+	return { cancelled: !openSuccessful };
 }
 
 const LOCALSTACK_AUTH_FILENAME = `${os.homedir()}/.localstack/auth.json`;

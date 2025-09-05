@@ -126,13 +126,13 @@ export default createPlugin(
 									message:
 										"Waiting for authentication response from the browser...",
 								});
-								const { authToken, canceled } = await minDelay(
+								const { authToken, cancelled } = await minDelay(
 									requestAuthentication(context, cancellationToken),
 								);
-								if (canceled) {
+								if (cancelled) {
 									void window.showWarningMessage("Authentication cancelled.");
 								}
-								if (canceled || cancellationToken.isCancellationRequested) {
+								if (cancelled || cancellationToken.isCancellationRequested) {
 									telemetry.track({
 										name: "auth_token_configured",
 										payload: {
