@@ -20,6 +20,11 @@ export default tseslint.config(
 			"@typescript-eslint/no-explicit-any": "off",
 			// Covered by @typescript-eslint/no-floating-promises.
 			"@typescript-eslint/require-await": "warn",
+			// Customize @typescript-eslint/no-floating-promises.
+			"@typescript-eslint/no-floating-promises": [
+				"warn",
+				{ checkThenables: true },
+			],
 		},
 	},
 	{
