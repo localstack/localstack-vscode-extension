@@ -40,12 +40,12 @@ async function overrideSelection(
 	override: boolean = false,
 ): Promise<OverrideDecision | undefined> {
 	if (override === true) {
-		return "override";
+		return "Override";
 	}
 	const fileList = filesToModify.join(" and ");
 	const selection = await window.showWarningMessage(
 		`The "localstack" AWS profile in ${fileList} exists, but does not match the expected properties. Do you want to override it?`,
-		"override",
+		"Override",
 	);
 	return selection;
 }
@@ -93,7 +93,7 @@ async function dnsResolveCheck(): Promise<boolean> {
 	}
 }
 
-type OverrideDecision = "override" | "do_not_override";
+type OverrideDecision = "Override" | "do_not_override";
 
 async function configureAwsConfigProfile(
 	awsConfigFilename: string,
@@ -110,7 +110,7 @@ async function configureAwsConfigProfile(
 	try {
 		if (section) {
 			// LocalStack profile exists, but does not match the expected properties
-			if (overrideDecision === "override") {
+			if (overrideDecision === "Override") {
 				// User chose to override the existing profile.
 
 				// check if dnsResolveCheck is successful
@@ -186,7 +186,7 @@ async function configureCredentialsProfile(
 	try {
 		// LocalStack profile exists, but does not match the expected properties
 		if (section) {
-			if (overrideDecision === "override") {
+			if (overrideDecision === "Override") {
 				// User chose to override the existing profile.
 				const updatedIniFile = updateIniSection(
 					iniFile,
@@ -321,7 +321,7 @@ export async function configureAwsProfiles(options: {
 			// profiles are there but need adjustment
 			// in testing, we always override
 			if (options?.forceOverride) {
-				overrideDecision = "override";
+				overrideDecision = "Override";
 			} else {
 				// check which files need override
 				const filesToModify = [];
@@ -333,7 +333,7 @@ export async function configureAwsProfiles(options: {
 		}
 	} else {
 		// if any of the profiles don't exist, we need to create it
-		overrideDecision = "override";
+		overrideDecision = "Override";
 	}
 
 	if (overrideDecision === undefined) {
@@ -350,7 +350,7 @@ export async function configureAwsProfiles(options: {
 			},
 		});
 		return;
-	} else if (overrideDecision === "override") {
+	} else if (overrideDecision === "Override") {
 		if (configNeedsOverride && credentialsNeedsOverride) {
 			[configModified, credentialsModified] = await Promise.all([
 				configureAwsConfigProfile(
