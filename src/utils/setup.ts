@@ -1,4 +1,4 @@
-import type { LogOutputChannel } from "vscode";
+import type { CancellationToken, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
 import { checkIsAuthenticated } from "./authenticate.ts";
@@ -29,10 +29,11 @@ const LOCALSTACK_DOCKER_IMAGE = "localstack/localstack-pro";
 
 export async function updateDockerImage(
 	outputChannel: LogOutputChannel,
+	cancellationToken: CancellationToken,
 ): Promise<void> {
 	const imageVersion = await getDockerImageSemverVersion(outputChannel);
 	if (!imageVersion) {
-		await pullDockerImage(outputChannel);
+		await pullDockerImage(outputChannel, cancellationToken);
 	}
 }
 
@@ -79,11 +80,15 @@ async function getDockerImageSemverVersion(
 	return imageVersion;
 }
 
-async function pullDockerImage(outputChannel: LogOutputChannel): Promise<void> {
+async function pullDockerImage(
+	outputChannel: LogOutputChannel,
+	cancellationToken: CancellationToken,
+): Promise<void> {
 	try {
 		await spawn("docker", ["pull", LOCALSTACK_DOCKER_IMAGE], {
 			outputChannel,
 			outputLabel: "docker.pull",
+			cancellationToken: cancellationToken,
 		});
 	} catch (error) {
 		outputChannel.error("Could not pull LocalStack docker image");

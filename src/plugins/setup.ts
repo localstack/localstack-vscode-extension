@@ -14,6 +14,7 @@ import {
 	activateLicenseUntilValid,
 } from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
+import { updateDockerImage } from "../utils/setup.ts";
 
 export default createPlugin(
 	"setup",
@@ -92,6 +93,14 @@ export default createPlugin(
 									return;
 								}
 							}
+
+							let imagePulled = false;
+							const pullImageProcess = updateDockerImage(
+								outputChannel,
+								cancellationToken,
+							).then(() => {
+								imagePulled = true;
+							});
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
@@ -226,6 +235,14 @@ export default createPlugin(
 								message: 'Finished configuring "localstack" AWS profiles.',
 							});
 							await minDelay(Promise.resolve());
+
+                            if (!imagePulled) {
+                                progress.report({
+                                    message:
+                                        "Waiting for the LocalStack docker image to finish downloading...",
+                                });
+                                await minDelay(pullImageProcess);
+                            }
 
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
