@@ -204,7 +204,7 @@ export default createPlugin(
 										"License is not valid or not assigned. Open License settings page to activate it.",
 								});
 
-								commands.executeCommand("localstack.openLicensePage");
+								await commands.executeCommand("localstack.openLicensePage");
 
 								await activateLicenseUntilValid(
 									outputChannel,
@@ -229,7 +229,7 @@ export default createPlugin(
 								}),
 							);
 
-							commands.executeCommand("localstack.refreshStatusBar");
+							await commands.executeCommand("localstack.refreshStatusBar");
 
 							progress.report({
 								message: 'Finished configuring "localstack" AWS profiles.',
