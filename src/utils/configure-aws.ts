@@ -15,9 +15,12 @@ import type { Telemetry } from "./telemetry.ts";
 
 const LOCALSTACK_CONFIG_PROFILE_NAME = "profile localstack";
 const VALID_ENDPOINT_URLS = [
-	"http://localhost.localstack.cloud:4566", // default
+	"http://localhost.localstack.cloud:4566",
+	"https://localhost.localstack.cloud:4566",
 	"http://127.0.0.1:4566",
+	"https://127.0.0.1:4566",
 	"http://localhost:4566",
+	"https://localhost:4566",
 ];
 const LOCALSTACK_CONFIG_PROPERTIES = {
 	region: "us-east-1",
@@ -143,8 +146,8 @@ async function configureAwsConfigProfile(
 		// check if dnsResolveCheck is successful
 		const isDnsResolved = await dnsResolveCheck();
 		const endpointUrl = isDnsResolved
-			? "http://localhost.localstack.cloud:4566"
-			: VALID_ENDPOINT_URLS[1];
+			? "https://localhost.localstack.cloud:4566"
+			: "https://127.0.0.1:4566";
 
 		const updatedIniFile = updateIniSection(
 			iniFile,
