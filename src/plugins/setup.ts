@@ -244,6 +244,18 @@ export default createPlugin(
                                 await minDelay(pullImageProcess);
                             }
 
+                            if (cancellationToken.isCancellationRequested) {
+                                telemetry.track({
+                                    name: "setup_ended",
+                                    payload: {
+                                        namespace: "onboarding",
+                                        steps: [1, 2, 3],
+                                        status: "CANCELLED",
+                                    },
+                                });
+                                return;
+                            }
+
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
 								window
