@@ -14,18 +14,15 @@ import type { Telemetry } from "./telemetry.ts";
 // TODO: add a test for this.
 
 const LOCALSTACK_CONFIG_PROFILE_NAME = "profile localstack";
-const VALID_ENDPOINT_URLS = [
-	"http://localhost.localstack.cloud:4566",
-	"https://localhost.localstack.cloud:4566",
-	"http://127.0.0.1:4566",
-	"https://127.0.0.1:4566",
-	"http://localhost:4566",
-	"https://localhost:4566",
+const VALID_HOSTNAMES = [
+	"localhost.localstack.cloud",
+	"127.0.0.1",
+	"localhost",
 ];
+const DEFAULT_PORT = "4566";
 const LOCALSTACK_CONFIG_PROPERTIES = {
 	region: "us-east-1",
 	output: "json",
-	endpoint_url: VALID_ENDPOINT_URLS,
 };
 
 // https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html
@@ -53,6 +50,21 @@ async function overrideSelection(
 	return selection;
 }
 
+function isValidEndpointUrl(url: string | undefined): boolean {
+	if (!url) return false;
+	try {
+		const parsed = new URL(url);
+		return (
+			(parsed.protocol === "http:" || parsed.protocol === "https:") &&
+			VALID_HOSTNAMES.includes(parsed.hostname) &&
+			parsed.port !== "" && // port must be present
+			(parsed.port === DEFAULT_PORT || /^\d+$/.test(parsed.port))
+		);
+	} catch {
+		return false;
+	}
+}
+
 function checkIfConfigNeedsOverride(section: IniSection | undefined): boolean {
 	if (!section) {
 		return true; // profile doesn't exist
@@ -61,7 +73,7 @@ function checkIfConfigNeedsOverride(section: IniSection | undefined): boolean {
 	return !(
 		section.properties.region &&
 		section.properties.endpoint_url &&
-		VALID_ENDPOINT_URLS.includes(section.properties.endpoint_url)
+		isValidEndpointUrl(section.properties.endpoint_url)
 	);
 }
 
@@ -119,8 +131,8 @@ async function configureAwsConfigProfile(
 				// check if dnsResolveCheck is successful
 				const isDnsResolved = await dnsResolveCheck();
 				const endpointUrl = isDnsResolved
-					? "http://localhost.localstack.cloud:4566"
-					: VALID_ENDPOINT_URLS[1];
+					? `http://localhost.localstack.cloud:${DEFAULT_PORT}`
+					: `http://127.0.0.1:${DEFAULT_PORT}`;
 
 				const updatedIniFile = updateIniSection(
 					iniFile,
@@ -146,8 +158,8 @@ async function configureAwsConfigProfile(
 		// check if dnsResolveCheck is successful
 		const isDnsResolved = await dnsResolveCheck();
 		const endpointUrl = isDnsResolved
-			? "https://localhost.localstack.cloud:4566"
-			: "https://127.0.0.1:4566";
+			? `http://localhost.localstack.cloud:${DEFAULT_PORT}`
+			: `http://127.0.0.1:${DEFAULT_PORT}`;
 
 		const updatedIniFile = updateIniSection(
 			iniFile,
