@@ -32,9 +32,6 @@ export async function activateLicense(outputChannel: LogOutputChannel) {
 export async function activateLicenseUntilValid(
 	outputChannel: LogOutputChannel,
 	cancellationToken: CancellationToken,
-	telemetry: Telemetry,
-	origin: "manual_trigger" | "extension_startup",
-	startedAt: string,
 ): Promise<void> {
 	while (true) {
 		if (cancellationToken.isCancellationRequested) {
@@ -42,18 +39,6 @@ export async function activateLicenseUntilValid(
 		}
 		const licenseIsValid = await checkIsLicenseValid(outputChannel);
 		if (licenseIsValid) {
-			telemetry.track({
-				name: "license_setup_ended",
-				payload: {
-					namespace: "onboarding",
-					step_order: 3,
-					origin: origin,
-					auth_token: await readAuthToken(),
-					started_at: startedAt,
-					ended_at: new Date().toISOString(),
-					status: "COMPLETED",
-				},
-			});
 			break;
 		}
 		await activateLicense(outputChannel);

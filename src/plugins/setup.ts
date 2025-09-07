@@ -221,9 +221,6 @@ export default createPlugin(
 								await activateLicenseUntilValid(
 									outputChannel,
 									cancellationToken,
-									telemetry,
-									origin_trigger,
-									licenseCheckStartedAt,
 								);
 							}
 
@@ -242,6 +239,19 @@ export default createPlugin(
 								});
 								return;
 							}
+
+							telemetry.track({
+								name: "license_setup_ended",
+								payload: {
+									namespace: "onboarding",
+									step_order: 3,
+									origin: origin_trigger,
+									auth_token: await readAuthToken(),
+									started_at: licenseCheckStartedAt,
+									ended_at: new Date().toISOString(),
+									status: "COMPLETED",
+								},
+							});
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
