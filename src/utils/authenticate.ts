@@ -124,30 +124,6 @@ export async function saveAuthToken(
 	}
 }
 
-/**
- * Checks if the user is authenticated by validating the stored auth token.
- *
- * License is validated separately
- *
- * @returns boolean indicating if the authentication is valid
- */
-export async function checkIsAuthenticated() {
-	try {
-		const authJson = await fs.readFile(LOCALSTACK_AUTH_FILENAME, "utf-8");
-		const authObject = JSON.parse(authJson) as unknown;
-		if (!isAuthTokenPresent(authObject)) {
-			return false;
-		}
-		const authToken = authObject[AUTH_TOKEN_KEY];
-		if (typeof authToken !== "string") {
-			return false;
-		}
-		return true;
-	} catch {
-		return false;
-	}
-}
-
 function isAuthTokenPresent(authObject: unknown) {
 	return (
 		typeof authObject === "object" &&
@@ -172,4 +148,15 @@ export async function readAuthToken(): Promise<string> {
 	} catch {
 		return "";
 	}
+}
+
+/**
+ * Checks if the user is authenticated by validating the stored auth token.
+ *
+ * License is validated separately
+ *
+ * @returns boolean indicating if the authentication is valid
+ */
+export async function checkIsAuthenticated() {
+	return (await readAuthToken()) !== "";
 }
