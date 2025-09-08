@@ -33,3 +33,5 @@ const CLI_WINDOWS_PATHS = [
 
 export const CLI_PATHS =
 	platform() === "win32" ? CLI_WINDOWS_PATHS : CLI_UNIX_PATHS;
+
+export const LOCALSTACK_DOCKER_IMAGE_NAME = "localstack/localstack-pro";

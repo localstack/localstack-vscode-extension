@@ -1,6 +1,8 @@
 import type { CancellationToken, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
+import {LOCALSTACK_DOCKER_IMAGE_NAME} from "../constants.ts";
+
 import { checkIsAuthenticated } from "./authenticate.ts";
 import { checkIsProfileConfigured } from "./configure-aws.ts";
 import { exec } from "./exec.ts";
@@ -25,8 +27,6 @@ export async function checkSetupStatus(outputChannel: LogOutputChannel) {
 	};
 }
 
-const LOCALSTACK_DOCKER_IMAGE = "localstack/localstack-pro";
-
 export async function updateDockerImage(
 	outputChannel: LogOutputChannel,
 	cancellationToken: CancellationToken,
@@ -49,7 +49,7 @@ async function getDockerImageSemverVersion(
 	outputChannel: LogOutputChannel,
 ): Promise<string | undefined> {
 	try {
-		const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE}`);
+		const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE_NAME}`);
 		const data: unknown = JSON.parse(stdout);
 		const parsed = InspectSchema.safeParse(data);
 		if (!parsed.success) {
@@ -77,7 +77,7 @@ async function pullDockerImage(
 	cancellationToken: CancellationToken,
 ): Promise<void> {
 	try {
-		await spawn("docker", ["pull", LOCALSTACK_DOCKER_IMAGE], {
+		await spawn("docker", ["pull", LOCALSTACK_DOCKER_IMAGE_NAME], {
 			outputChannel,
 			outputLabel: "docker.pull",
 			cancellationToken: cancellationToken,
