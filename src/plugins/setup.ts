@@ -229,7 +229,7 @@ export default createPlugin(
 								}),
 							);
 
-							await commands.executeCommand("localstack.refreshStatusBar");
+							void commands.executeCommand("localstack.refreshStatusBar");
 
 							progress.report({
 								message: 'Finished configuring "localstack" AWS profiles.',
