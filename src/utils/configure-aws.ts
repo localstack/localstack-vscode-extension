@@ -57,8 +57,7 @@ function isValidEndpointUrl(url: string | undefined): boolean {
 		return (
 			(parsed.protocol === "http:" || parsed.protocol === "https:") &&
 			VALID_HOSTNAMES.includes(parsed.hostname) &&
-			parsed.port !== "" && // port must be present
-			(parsed.port === DEFAULT_PORT || /^\d+$/.test(parsed.port))
+			parsed.port // port must be present
 		);
 	} catch {
 		return false;
