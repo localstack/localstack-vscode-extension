@@ -53,7 +53,7 @@ export async function activate(context: ExtensionContext) {
 		);
 		context.subscriptions.push(containerStatusTracker);
 
-		const localStackStatusTracker = await createLocalStackStatusTracker(
+		const localStackStatusTracker = createLocalStackStatusTracker(
 			containerStatusTracker,
 			outputChannel,
 			timeTracker,
