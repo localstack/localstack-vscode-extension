@@ -266,15 +266,3 @@ export async function getOrCreateExtensionSessionId(
 	}
 	return sessionId;
 }
-
-// Checks for machine id in workspaceState, creates if missing (to avoid calling machineId multiple times)
-export async function getOrCreateMachineId(
-	context: ExtensionContext,
-): Promise<string> {
-	let machineIdValue = context.workspaceState.get<string>("machine_id");
-	if (!machineIdValue) {
-		machineIdValue = uuidv4();
-		await context.workspaceState.update("machine_id", machineIdValue);
-	}
-	return machineIdValue;
-}

@@ -167,7 +167,6 @@ async function postEvent(
 export function createTelemetry(
 	outputChannel: LogOutputChannel,
 	sessionId: string,
-	machineId: string,
 ): Telemetry {
 	return {
 		track(event) {
@@ -193,7 +192,6 @@ export function createTelemetry(
 				schema_version: SCHEMA_VERSION,
 				ide_version: vscodeVersion,
 				extension_version: extensionVersion,
-				machine_id: machineId,
 				operating_system: os.platform(),
 				// if anything inside payload include it
 				...event.payload,
