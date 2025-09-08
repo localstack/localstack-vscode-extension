@@ -1,8 +1,6 @@
 import type { CancellationToken, LogOutputChannel } from "vscode";
 
-import { readAuthToken } from "./authenticate.ts";
 import { execLocalStack } from "./cli.ts";
-import type { Telemetry } from "./telemetry.ts";
 
 const LICENSE_VALIDITY_MARKER = "license validity: valid";
 

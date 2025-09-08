@@ -1,4 +1,4 @@
-import { v7 as uuidv7, v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 import type { ExtensionContext, LogOutputChannel, MessageItem } from "vscode";
 import { commands, env, Uri, window } from "vscode";
 
