@@ -17,7 +17,13 @@ import { minDelay } from "../utils/promises.ts";
 
 export default createPlugin(
 	"setup",
-	({ context, outputChannel, setupStatusTracker, telemetry }) => {
+	({
+		context,
+		outputChannel,
+		setupStatusTracker,
+		localStackStatusTracker,
+		telemetry,
+	}) => {
 		context.subscriptions.push(
 			commands.registerCommand(
 				"localstack.setup",
@@ -222,16 +228,29 @@ export default createPlugin(
 							await minDelay(Promise.resolve());
 
 							/////////////////////////////////////////////////////////////////////
-							window
-								.showInformationMessage("LocalStack is ready to start", {
-									title: "Start LocalStack",
-									command: "localstack.start",
-								})
-								.then((selection) => {
-									if (selection) {
-										commands.executeCommand(selection.command);
-									}
-								});
+							if (localStackStatusTracker.status() === "running") {
+								window
+									.showInformationMessage("LocalStack is running.", {
+										title: "View Logs",
+										command: "localstack.viewLogs",
+									})
+									.then((selection) => {
+										if (selection) {
+											commands.executeCommand(selection.command);
+										}
+									});
+							} else {
+								window
+									.showInformationMessage("LocalStack is ready to start.", {
+										title: "Start LocalStack",
+										command: "localstack.start",
+									})
+									.then((selection) => {
+										if (selection) {
+											commands.executeCommand(selection.command);
+										}
+									});
+							}
 
 							telemetry.track({
 								name: "setup_ended",
