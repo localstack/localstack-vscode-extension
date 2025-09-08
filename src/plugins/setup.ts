@@ -220,7 +220,7 @@ export default createPlugin(
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
-								message: "Configuring AWS profiles...",
+								message: "Configuring AWS profile...",
 							});
 							await minDelay(
 								configureAwsProfiles({
@@ -232,7 +232,7 @@ export default createPlugin(
 							void commands.executeCommand("localstack.refreshStatusBar");
 
 							progress.report({
-								message: 'Finished configuring "localstack" AWS profiles.',
+								message: 'Finished configuring the "localstack" AWS profile.',
 							});
 							await minDelay(Promise.resolve());
 

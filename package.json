@@ -87,7 +87,7 @@
 			},
 			{
 				"command": "localstack.configureAwsProfiles",
-				"title": "Configure \"localstack\" AWS Profiles",
+				"title": "Configure AWS Profile \"localstack\"",
 				"category": "LocalStack"
 			}
 		],
