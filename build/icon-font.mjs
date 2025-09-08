@@ -1,5 +1,6 @@
 // DANGER: This file is ignored because it requires the "webfont" package, which has
 // been compromised to some extent through https://www.aikido.dev/blog/npm-debug-and-chalk-packages-compromised.
+// Ideally, we will replace this with a safer alternative in the future, or restore when the package is fixed.
 
 // import fs from "node:fs/promises";
 // import path from "node:path";
