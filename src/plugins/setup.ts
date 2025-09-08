@@ -239,7 +239,7 @@ export default createPlugin(
                             if (!imagePulled) {
                                 progress.report({
                                     message:
-                                        "Waiting for the LocalStack docker image to finish downloading...",
+                                        "Downloading LocalStack docker image...",
                                 });
                                 await minDelay(pullImageProcess);
                             }
