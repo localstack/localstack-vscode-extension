@@ -58,7 +58,7 @@ export function createLocalStackStatusTracker(
 	});
 
 	emitter.on((newStatus) => {
-		outputChannel.info(`localstack=${newStatus}`);
+		outputChannel.trace(`[localstack-status] localstack=${newStatus}`);
 
 		if (newStatus === "running") {
 			healthCheckStatusTracker.stop();
@@ -66,8 +66,8 @@ export function createLocalStackStatusTracker(
 	});
 
 	containerStatusTracker.onChange((newContainerStatus) => {
-		outputChannel.info(
-			`container=${newContainerStatus} (localstack=${status})`,
+		outputChannel.trace(
+			`[localstack-status] container=${newContainerStatus} (localstack=${status})`,
 		);
 
 		if (newContainerStatus === "running" && status !== "running") {
@@ -159,20 +159,16 @@ function createHealthStatusTracker(
 	};
 
 	let enqueueAgain = false;
-
 	const enqueueUpdateStatus = () => {
 		if (healthCheckTimeout) {
 			return;
 		}
 
-		healthCheckTimeout = setTimeout(() => {
+		healthCheckTimeout = setInterval(() => {
 			void fetchAndUpdateStatus().then(() => {
 				if (!enqueueAgain) {
 					return;
 				}
-
-				healthCheckTimeout = undefined;
-				enqueueUpdateStatus();
 			});
 		}, 1_000);
 	};
@@ -188,7 +184,7 @@ function createHealthStatusTracker(
 		stop() {
 			status = undefined;
 			enqueueAgain = false;
-			clearTimeout(healthCheckTimeout);
+			clearInterval(healthCheckTimeout);
 			healthCheckTimeout = undefined;
 		},
 		onChange(callback) {
