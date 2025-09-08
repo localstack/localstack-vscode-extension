@@ -45,39 +45,31 @@ const InspectSchema = z.array(
 	}),
 );
 
-async function inspectDockerImage(
-	outputChannel: LogOutputChannel,
-): Promise<string | undefined> {
-	try {
-		const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE}`);
-		const data: unknown = JSON.parse(stdout);
-		const parsed = InspectSchema.safeParse(data);
-		if (!parsed.success) {
-			throw new Error(
-				`Could not parse "docker inspect" output: ${JSON.stringify(z.treeifyError(parsed.error))}`,
-			);
-		}
-		const env = parsed.data[0]?.Config.Env ?? [];
-		const version = env
-			.find((line) => line.startsWith("LOCALSTACK_BUILD_VERSION="))
-			?.slice("LOCALSTACK_BUILD_VERSION=".length);
-		return version;
-	} catch (error) {
-		outputChannel.error("Could not inspect LocalStack docker image");
-		outputChannel.error(error instanceof Error ? error : String(error));
-		return undefined;
-	}
-}
-
 async function getDockerImageSemverVersion(
 	outputChannel: LogOutputChannel,
 ): Promise<string | undefined> {
-	const imageVersion = await inspectDockerImage(outputChannel);
-	if (!imageVersion) {
-		return;
-	}
-
-	return imageVersion;
+    try {
+        const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE}`);
+        const data: unknown = JSON.parse(stdout);
+        const parsed = InspectSchema.safeParse(data);
+        if (!parsed.success) {
+            throw new Error(
+                `Could not parse "docker inspect" output: ${JSON.stringify(z.treeifyError(parsed.error))}`,
+            );
+        }
+        const env = parsed.data[0]?.Config.Env ?? [];
+        const imageVersion = env
+            .find((line) => line.startsWith("LOCALSTACK_BUILD_VERSION="))
+            ?.slice("LOCALSTACK_BUILD_VERSION=".length);
+        if (!imageVersion) {
+            return;
+        }
+        return imageVersion;
+    } catch (error) {
+        outputChannel.error("Could not inspect LocalStack docker image");
+        outputChannel.error(error instanceof Error ? error : String(error));
+        return undefined;
+    }
 }
 
 async function pullDockerImage(
