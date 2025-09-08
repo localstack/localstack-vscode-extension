@@ -16,6 +16,13 @@ import {
 } from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
 import { updateDockerImage } from "../utils/setup.ts";
+import {
+	get_setup_ended_on_image_prefetch_cancelled,
+	get_setup_ended_on_authentication_cancelled,
+	get_setup_ended_on_cli_setup_cancelled,
+	get_setup_ended_on_license_setup_cancelled,
+	get_setup_ended_completed,
+} from "../utils/telemetry.ts";
 
 export default createPlugin(
 	"setup",
@@ -71,6 +78,7 @@ export default createPlugin(
 											status: "CANCELLED",
 										},
 									});
+									telemetry.track(get_setup_ended_on_cli_setup_cancelled());
 									return;
 								}
 							}
@@ -91,43 +99,17 @@ export default createPlugin(
 							const authenticated = await minDelay(checkIsAuthenticated());
 							if (cancellationToken.isCancellationRequested) {
 								telemetry.track({
-									name: "setup_ended",
+									name: "auth_token_configured",
 									payload: {
 										namespace: "onboarding",
-										steps: [
-											{
-												name: "emulator_installed",
-												is_first_step: true,
-												is_last_step: false,
-												step_order: 1,
-												status: "COMPLETED",
-											},
-											{
-												name: "auth_token_configured",
-												is_first_step: false,
-												is_last_step: false,
-												step_order: 2,
-												status: "CANCELLED",
-											},
-											{
-												name: "license_setup_ended",
-												is_first_step: false,
-												is_last_step: false,
-												step_order: 3,
-												status: "SKIPPED",
-											},
-											{
-												name: "aws_profile_configured",
-												is_first_step: false,
-												is_last_step: true,
-												step_order: 4,
-												status: "SKIPPED",
-											},
-										],
+										origin: origin_trigger,
+										step_order: 2,
+										started_at: authStartedAuthAt,
+										ended_at: new Date().toISOString(),
 										status: "CANCELLED",
-										auth_token: await readAuthToken(),
 									},
 								});
+								telemetry.track(get_setup_ended_on_authentication_cancelled());
 								return;
 							}
 							if (authenticated) {
@@ -145,6 +127,7 @@ export default createPlugin(
 										status: "SKIPPED",
 									},
 								});
+
 								await minDelay(Promise.resolve());
 							} else {
 								/////////////////////////////////////////////////////////////////////
@@ -171,6 +154,9 @@ export default createPlugin(
 											status: "CANCELLED",
 										},
 									});
+									telemetry.track(
+										get_setup_ended_on_authentication_cancelled(),
+									);
 									return;
 								}
 
@@ -192,7 +178,9 @@ export default createPlugin(
 											status: "CANCELLED",
 										},
 									});
-
+									telemetry.track(
+										get_setup_ended_on_authentication_cancelled(authToken),
+									);
 									return;
 								}
 							}
@@ -237,6 +225,11 @@ export default createPlugin(
 										status: "CANCELLED",
 									},
 								});
+								telemetry.track(
+									get_setup_ended_on_license_setup_cancelled(
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 
@@ -280,14 +273,11 @@ export default createPlugin(
 							}
 
 							if (cancellationToken.isCancellationRequested) {
-								telemetry.track({
-									name: "setup_ended",
-									payload: {
-										namespace: "onboarding",
-										steps: [1, 2, 3],
-										status: "CANCELLED",
-									},
-								});
+								telemetry.track(
+									get_setup_ended_on_image_prefetch_cancelled(
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 
@@ -316,44 +306,7 @@ export default createPlugin(
 									});
 							}
 
-							telemetry.track({
-								name: "setup_ended",
-								payload: {
-									namespace: "onboarding",
-									steps: [
-										{
-											name: "emulator_installed",
-											is_first_step: true,
-											is_last_step: false,
-											step_order: 1,
-											status: "COMPLETED",
-										},
-										{
-											name: "auth_token_configured",
-											is_first_step: false,
-											is_last_step: false,
-											step_order: 2,
-											status: "COMPLETED",
-										},
-										{
-											name: "license_setup_ended",
-											is_first_step: false,
-											is_last_step: false,
-											step_order: 3,
-											status: "COMPLETED",
-										},
-										{
-											name: "aws_profile_configured",
-											is_first_step: false,
-											is_last_step: true,
-											step_order: 4,
-											status: "COMPLETED",
-										},
-									],
-									status: "COMPLETED",
-									auth_token: await readAuthToken(),
-								},
-							});
+							telemetry.track(get_setup_ended_completed(await readAuthToken()));
 						},
 					);
 				},
