@@ -90,23 +90,19 @@ export async function runInstallProcess(
 			message: "Choose installation scope...",
 		});
 
-		const installScope = await window.showQuickPick(
-			[
-				{
-					label: "Local (just me)",
-					description: "Install LocalStack CLI for current user only",
-					value: "local",
-				},
-				{
-					label: "Global (all users)",
-					description:
-						"Install LocalStack CLI for all users (requires admin privileges)",
-					value: "global",
-				},
-			],
+		const installScope = await window.showInformationMessage(
+			"Choose a LocalStack CLI installation scope",
 			{
-				placeHolder: "Select installation scope",
-				ignoreFocusOut: true,
+				modal: true,
+			},
+
+			{
+				title: "Install for current user only",
+				value: "local",
+			},
+			{
+				title: "Install for all users",
+				value: "global",
 			},
 		);
 
