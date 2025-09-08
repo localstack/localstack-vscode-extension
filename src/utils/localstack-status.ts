@@ -37,7 +37,7 @@ export async function createLocalStackStatusTracker(
 	};
 
 	const deriveStatus = () => {
-		const newStatus = getLocalStackStatus(containerStatus, healthCheck);
+		const newStatus = getLocalStackStatus(containerStatus, healthCheck, status);
 		setStatus(newStatus);
 	};
 
@@ -85,11 +85,15 @@ export async function createLocalStackStatusTracker(
 function getLocalStackStatus(
 	containerStatus: ContainerStatus | undefined,
 	healthCheck: boolean | undefined,
+	previousStatus?: LocalStackStatus,
 ): LocalStackStatus {
 	if (containerStatus === "running") {
 		if (healthCheck === true) {
 			return "running";
 		} else {
+			if (previousStatus === "running" || previousStatus === "stopping") {
+				return "stopping";
+			}
 			return "starting";
 		}
 	} else if (containerStatus === "stopping") {
