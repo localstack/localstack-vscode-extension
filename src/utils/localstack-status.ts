@@ -1,10 +1,12 @@
 import type { Disposable, LogOutputChannel } from "vscode";
+import { de } from "zod/v4/locales";
 
 import type {
 	ContainerStatus,
 	ContainerStatusTracker,
 } from "./container-status.ts";
 import { createEmitter } from "./emitter.ts";
+import { fetchHealth } from "./manage.ts";
 import type { TimeTracker } from "./time-tracker.ts";
 
 export type LocalStackStatus = "starting" | "running" | "stopping" | "stopped";
@@ -18,16 +20,19 @@ export interface LocalStackStatusTracker extends Disposable {
 /**
  * Checks the status of the LocalStack instance in realtime.
  */
-export async function createLocalStackStatusTracker(
+export function createLocalStackStatusTracker(
 	containerStatusTracker: ContainerStatusTracker,
 	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
-): Promise<LocalStackStatusTracker> {
+): LocalStackStatusTracker {
 	let containerStatus: ContainerStatus | undefined;
 	let status: LocalStackStatus | undefined;
 	const emitter = createEmitter<LocalStackStatus>(outputChannel);
 
-	let healthCheck: boolean | undefined;
+	const healthCheckStatusTracker = createHealthStatusTracker(
+		outputChannel,
+		timeTracker,
+	);
 
 	const setStatus = (newStatus: LocalStackStatus) => {
 		if (status !== newStatus) {
@@ -37,7 +42,11 @@ export async function createLocalStackStatusTracker(
 	};
 
 	const deriveStatus = () => {
-		const newStatus = getLocalStackStatus(containerStatus, healthCheck, status);
+		const newStatus = getLocalStackStatus(
+			containerStatus,
+			healthCheckStatusTracker.status(),
+			status,
+		);
 		setStatus(newStatus);
 	};
 
@@ -48,15 +57,26 @@ export async function createLocalStackStatusTracker(
 		}
 	});
 
-	let healthCheckTimeout: NodeJS.Timeout | undefined;
-	const startHealthCheck = async () => {
-		healthCheck = await fetchHealth();
-		deriveStatus();
-		healthCheckTimeout = setTimeout(() => void startHealthCheck(), 1_000);
-	};
+	emitter.on((newStatus) => {
+		outputChannel.info(`localstack=${newStatus}`);
 
-	await timeTracker.run("localstack-status.healthCheck", async () => {
-		await startHealthCheck();
+		if (newStatus === "running") {
+			healthCheckStatusTracker.stop();
+		}
+	});
+
+	containerStatusTracker.onChange((newContainerStatus) => {
+		outputChannel.info(
+			`container=${newContainerStatus} (localstack=${status})`,
+		);
+
+		if (newContainerStatus === "running" && status !== "running") {
+			healthCheckStatusTracker.start();
+		}
+	});
+
+	healthCheckStatusTracker.onChange(() => {
+		deriveStatus();
 	});
 
 	return {
@@ -77,18 +97,18 @@ export async function createLocalStackStatusTracker(
 			}
 		},
 		dispose() {
-			clearTimeout(healthCheckTimeout);
+			healthCheckStatusTracker.dispose();
 		},
 	};
 }
 
 function getLocalStackStatus(
 	containerStatus: ContainerStatus | undefined,
-	healthCheck: boolean | undefined,
+	healthStatus: HealthStatus | undefined,
 	previousStatus?: LocalStackStatus,
 ): LocalStackStatus {
 	if (containerStatus === "running") {
-		if (healthCheck === true) {
+		if (healthStatus === "healthy") {
 			return "running";
 		} else {
 			// When the LS container is running, and the health check fails:
@@ -106,20 +126,79 @@ function getLocalStackStatus(
 	}
 }
 
-async function fetchHealth(): Promise<boolean> {
-	// Abort the fetch if it takes more than 500ms.
-	const controller = new AbortController();
-	setTimeout(() => controller.abort(), 500);
+type HealthStatus = "healthy" | "unhealthy";
 
-	try {
-		// health is ok in the majority of use cases, however, determining status based on it can be flaky.
-		// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
-		// though we don't know if it happens often.
-		const response = await fetch("http://localhost:4566/_localstack/health", {
-			signal: controller.signal,
+interface HealthStatusTracker extends Disposable {
+	status(): HealthStatus | undefined;
+	start(): void;
+	stop(): void;
+	onChange(callback: (status: HealthStatus | undefined) => void): void;
+}
+
+function createHealthStatusTracker(
+	outputChannel: LogOutputChannel,
+	timeTracker: TimeTracker,
+): HealthStatusTracker {
+	let status: HealthStatus | undefined;
+	const emitter = createEmitter<HealthStatus | undefined>(outputChannel);
+
+	let healthCheckTimeout: NodeJS.Timeout | undefined;
+
+	const updateStatus = (newStatus: HealthStatus | undefined) => {
+		if (status !== newStatus) {
+			status = newStatus;
+			void emitter.emit(status);
+		}
+	};
+
+	const fetchAndUpdateStatus = async () => {
+		await timeTracker.run("localstack-status.health", async () => {
+			const newStatus = (await fetchHealth()) ? "healthy" : "unhealthy";
+			updateStatus(newStatus);
 		});
-		return response.ok;
-	} catch (err) {
-		return false;
-	}
+	};
+
+	let enqueueAgain = false;
+
+	const enqueueUpdateStatus = () => {
+		if (healthCheckTimeout) {
+			return;
+		}
+
+		healthCheckTimeout = setTimeout(() => {
+			void fetchAndUpdateStatus().then(() => {
+				if (!enqueueAgain) {
+					return;
+				}
+
+				healthCheckTimeout = undefined;
+				enqueueUpdateStatus();
+			});
+		}, 1_000);
+	};
+
+	return {
+		status() {
+			return status;
+		},
+		start() {
+			enqueueAgain = true;
+			enqueueUpdateStatus();
+		},
+		stop() {
+			status = undefined;
+			enqueueAgain = false;
+			clearTimeout(healthCheckTimeout);
+			healthCheckTimeout = undefined;
+		},
+		onChange(callback) {
+			emitter.on(callback);
+			if (status) {
+				callback(status);
+			}
+		},
+		dispose() {
+			clearTimeout(healthCheckTimeout);
+		},
+	};
 }
