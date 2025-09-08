@@ -48,28 +48,28 @@ const InspectSchema = z.array(
 async function getDockerImageSemverVersion(
 	outputChannel: LogOutputChannel,
 ): Promise<string | undefined> {
-    try {
-        const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE}`);
-        const data: unknown = JSON.parse(stdout);
-        const parsed = InspectSchema.safeParse(data);
-        if (!parsed.success) {
-            throw new Error(
-                `Could not parse "docker inspect" output: ${JSON.stringify(z.treeifyError(parsed.error))}`,
-            );
-        }
-        const env = parsed.data[0]?.Config.Env ?? [];
-        const imageVersion = env
-            .find((line) => line.startsWith("LOCALSTACK_BUILD_VERSION="))
-            ?.slice("LOCALSTACK_BUILD_VERSION=".length);
-        if (!imageVersion) {
-            return;
-        }
-        return imageVersion;
-    } catch (error) {
-        outputChannel.error("Could not inspect LocalStack docker image");
-        outputChannel.error(error instanceof Error ? error : String(error));
-        return undefined;
-    }
+	try {
+		const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE}`);
+		const data: unknown = JSON.parse(stdout);
+		const parsed = InspectSchema.safeParse(data);
+		if (!parsed.success) {
+			throw new Error(
+				`Could not parse "docker inspect" output: ${JSON.stringify(z.treeifyError(parsed.error))}`,
+			);
+		}
+		const env = parsed.data[0]?.Config.Env ?? [];
+		const imageVersion = env
+			.find((line) => line.startsWith("LOCALSTACK_BUILD_VERSION="))
+			?.slice("LOCALSTACK_BUILD_VERSION=".length);
+		if (!imageVersion) {
+			return;
+		}
+		return imageVersion;
+	} catch (error) {
+		outputChannel.error("Could not inspect LocalStack docker image");
+		outputChannel.error(error instanceof Error ? error : String(error));
+		return undefined;
+	}
 }
 
 async function pullDockerImage(

@@ -236,25 +236,24 @@ export default createPlugin(
 							});
 							await minDelay(Promise.resolve());
 
-                            if (!imagePulled) {
-                                progress.report({
-                                    message:
-                                        "Downloading LocalStack docker image...",
-                                });
-                                await minDelay(pullImageProcess);
-                            }
+							if (!imagePulled) {
+								progress.report({
+									message: "Downloading LocalStack docker image...",
+								});
+								await minDelay(pullImageProcess);
+							}
 
-                            if (cancellationToken.isCancellationRequested) {
-                                telemetry.track({
-                                    name: "setup_ended",
-                                    payload: {
-                                        namespace: "onboarding",
-                                        steps: [1, 2, 3],
-                                        status: "CANCELLED",
-                                    },
-                                });
-                                return;
-                            }
+							if (cancellationToken.isCancellationRequested) {
+								telemetry.track({
+									name: "setup_ended",
+									payload: {
+										namespace: "onboarding",
+										steps: [1, 2, 3],
+										status: "CANCELLED",
+									},
+								});
+								return;
+							}
 
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
