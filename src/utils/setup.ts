@@ -1,7 +1,7 @@
 import type { CancellationToken, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
-import {LOCALSTACK_DOCKER_IMAGE_NAME} from "../constants.ts";
+import { LOCALSTACK_DOCKER_IMAGE_NAME } from "../constants.ts";
 
 import { checkIsAuthenticated } from "./authenticate.ts";
 import { checkIsProfileConfigured } from "./configure-aws.ts";
@@ -49,7 +49,9 @@ async function getDockerImageSemverVersion(
 	outputChannel: LogOutputChannel,
 ): Promise<string | undefined> {
 	try {
-		const { stdout } = await exec(`docker inspect ${LOCALSTACK_DOCKER_IMAGE_NAME}`);
+		const { stdout } = await exec(
+			`docker inspect ${LOCALSTACK_DOCKER_IMAGE_NAME}`,
+		);
 		const data: unknown = JSON.parse(stdout);
 		const parsed = InspectSchema.safeParse(data);
 		if (!parsed.success) {
