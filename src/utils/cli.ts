@@ -4,13 +4,13 @@ import { access } from "node:fs/promises";
 import type { CancellationToken, LogOutputChannel } from "vscode";
 import { workspace } from "vscode";
 
-import { CLI_PATHS } from "../constants.ts";
+import { CLI_PATHS, LOCALSTACK_DOCKER_IMAGE_NAME } from "../constants.ts";
 
 import { exec } from "./exec.ts";
 import { spawn } from "./spawn.ts";
 import type { SpawnOptions } from "./spawn.ts";
 
-const IMAGE_NAME = "localstack/localstack-pro";
+const IMAGE_NAME = LOCALSTACK_DOCKER_IMAGE_NAME; // not using the import directly as the constant name should match the env var
 const LOCALSTACK_LDM_PREVIEW = "1";
 
 const findLocalStack = async (): Promise<string> => {

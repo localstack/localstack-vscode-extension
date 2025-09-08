@@ -14,6 +14,7 @@ import {
 	activateLicenseUntilValid,
 } from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
+import { updateDockerImage } from "../utils/setup.ts";
 
 export default createPlugin(
 	"setup",
@@ -92,6 +93,14 @@ export default createPlugin(
 									return;
 								}
 							}
+
+							let imagePulled = false;
+							const pullImageProcess = updateDockerImage(
+								outputChannel,
+								cancellationToken,
+							).then(() => {
+								imagePulled = true;
+							});
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
@@ -195,7 +204,7 @@ export default createPlugin(
 										"License is not valid or not assigned. Open License settings page to activate it.",
 								});
 
-								commands.executeCommand("localstack.openLicensePage");
+								await commands.executeCommand("localstack.openLicensePage");
 
 								await activateLicenseUntilValid(
 									outputChannel,
@@ -220,12 +229,31 @@ export default createPlugin(
 								}),
 							);
 
-							commands.executeCommand("localstack.refreshStatusBar");
+							void commands.executeCommand("localstack.refreshStatusBar");
 
 							progress.report({
 								message: 'Finished configuring "localstack" AWS profiles.',
 							});
 							await minDelay(Promise.resolve());
+
+							if (!imagePulled) {
+								progress.report({
+									message: "Downloading LocalStack docker image...",
+								});
+								await minDelay(pullImageProcess);
+							}
+
+							if (cancellationToken.isCancellationRequested) {
+								telemetry.track({
+									name: "setup_ended",
+									payload: {
+										namespace: "onboarding",
+										steps: [1, 2, 3],
+										status: "CANCELLED",
+									},
+								});
+								return;
+							}
 
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
