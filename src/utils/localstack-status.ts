@@ -91,6 +91,9 @@ function getLocalStackStatus(
 		if (healthCheck === true) {
 			return "running";
 		} else {
+			// When the LS container is running, and the health check fails:
+			// - If the previous status was "running", we are likely stopping LS
+			// - If the previous status was "stopping", we are still stopping LS
 			if (previousStatus === "running" || previousStatus === "stopping") {
 				return "stopping";
 			}
