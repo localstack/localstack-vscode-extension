@@ -159,16 +159,20 @@ function createHealthStatusTracker(
 	};
 
 	let enqueueAgain = false;
+
 	const enqueueUpdateStatus = () => {
 		if (healthCheckTimeout) {
 			return;
 		}
 
-		healthCheckTimeout = setInterval(() => {
+		healthCheckTimeout = setTimeout(() => {
 			void fetchAndUpdateStatus().then(() => {
 				if (!enqueueAgain) {
 					return;
 				}
+
+				healthCheckTimeout = undefined;
+				enqueueUpdateStatus();
 			});
 		}, 1_000);
 	};
@@ -184,7 +188,7 @@ function createHealthStatusTracker(
 		stop() {
 			status = undefined;
 			enqueueAgain = false;
-			clearInterval(healthCheckTimeout);
+			clearTimeout(healthCheckTimeout);
 			healthCheckTimeout = undefined;
 		},
 		onChange(callback) {
