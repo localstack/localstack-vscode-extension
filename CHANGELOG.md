@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0 (2025-09-09)
+
+- feat: Always show `Start` and `Stop` commands if LocalStack CLI is available
+- feat: Always display LocalStack instance status if LocalStack CLI is available
+- feat: Use modals to improve the clarity of installation and authentication setup steps
+- feat: Pre-fetch LocalStack docker image during setup wizard
+- fix: Reduce LocalStack health check calls to a necessary minimum
+- fix: Improve LocalStack endpoint detection in AWS profile config process
+- fix: Invalid status when stopping LocalStack externally
+- fix: Don't show start localstack if already started during setup
+- chore: improve logging DNS resolution failure
+- chore: Update telemetry events
+- chore: Remove preview badge
+
 ## 1.1.0 (2025-09-04)
 
 - feat: Add LocalStack license activation step to the setup wizard
