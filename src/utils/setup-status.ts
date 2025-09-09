@@ -48,13 +48,11 @@ export async function createSetupStatusTracker(
 		statuses = await checkSetupStatus(outputChannel);
 
 		const setupRequired = [
-			Object.values(statuses), 
-			awsProfileTracker.status() === "ok", 
+			Object.values(statuses),
+			awsProfileTracker.status() === "ok",
 			localStackAuthenticationTracker.status() === "ok",
-		].some(
-			(check) => check === false,
-		);
-		
+		].some((check) => check === false);
+
 		const newStatus = setupRequired ? "setup_required" : "ok";
 		if (status !== newStatus) {
 			status = newStatus;
@@ -167,9 +165,7 @@ function createFileStatusTracker(
 			updateStatus();
 		})
 		.on("error", (error) => {
-			outputChannel.error(
-				`${outputChannelPrefix} Error watching file`,
-			);
+			outputChannel.error(`${outputChannelPrefix} Error watching file`);
 			outputChannel.error(error instanceof Error ? error : String(error));
 		});
 
@@ -204,7 +200,7 @@ function createAwsProfileStatusTracker(
 		outputChannel,
 		"[setup-status.aws-profile]",
 		[AWS_CONFIG_FILENAME, AWS_CREDENTIALS_FILENAME],
-		async () => (await checkIsProfileConfigured()) ? "ok" : "setup_required",
+		async () => ((await checkIsProfileConfigured()) ? "ok" : "setup_required"),
 	);
 }
 
@@ -214,7 +210,7 @@ function createAwsProfileStatusTracker(
  * Emits status changes to registered listeners.
  *
  * @param outputChannel - Channel for logging output and trace messages.
- * @param outputChannel 
+ * @param outputChannel
  * @returns A {@link StatusTracker} instance for querying status, subscribing to changes, and disposing resources.
  */
 function createLocalStackAuthenticationStatusTracker(
@@ -224,6 +220,6 @@ function createLocalStackAuthenticationStatusTracker(
 		outputChannel,
 		"[setup-status.localstack-authentication]",
 		[LOCALSTACK_AUTH_FILENAME],
-		async () => (await checkIsAuthenticated()) ? "ok" : "setup_required",
+		async () => ((await checkIsAuthenticated()) ? "ok" : "setup_required"),
 	);
 }
