@@ -40,7 +40,7 @@ export async function runInstallProcess(
 	outputChannel: LogOutputChannel,
 	telemetry: Telemetry,
 	origin?: "extension_startup" | "manual_trigger",
-): Promise<{ cancelled: boolean }> {
+): Promise<{ cancelled: boolean; skipped?: boolean }> {
 	/////////////////////////////////////////////////////////////////////
 	const origin_trigger = origin ? origin : "manual_trigger";
 	progress.report({
@@ -64,14 +64,14 @@ export async function runInstallProcess(
 			payload: {
 				namespace: "onboarding",
 				origin: origin_trigger,
-				position: 1,
+				step_order: 1,
 				started_at: startedAt,
 				ended_at: new Date().toISOString(),
 				status: "SKIPPED",
 			},
 		});
 		await minDelay();
-		return { cancelled: false };
+		return { cancelled: false, skipped: true };
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ export async function runInstallProcess(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							position: 1,
+							step_order: 1,
 							started_at: startedAt,
 							ended_at: new Date().toISOString(),
 							status: "FAILED",
@@ -177,7 +177,7 @@ export async function runInstallProcess(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							position: 1,
+							step_order: 1,
 							started_at: startedAt,
 							ended_at: new Date().toISOString(),
 							status: "FAILED",
@@ -194,7 +194,7 @@ export async function runInstallProcess(
 			payload: {
 				namespace: "onboarding",
 				origin: origin_trigger,
-				position: 1,
+				step_order: 1,
 				started_at: startedAt,
 				ended_at: new Date().toISOString(),
 				status: "COMPLETED",

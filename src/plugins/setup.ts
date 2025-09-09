@@ -5,6 +5,7 @@ import {
 	checkIsAuthenticated,
 	requestAuthentication,
 	saveAuthToken,
+	readAuthToken,
 } from "../utils/authenticate.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
@@ -15,6 +16,7 @@ import {
 } from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
 import { updateDockerImage } from "../utils/setup.ts";
+import { get_setup_ended } from "../utils/telemetry.ts";
 
 export default createPlugin(
 	"setup",
@@ -38,26 +40,6 @@ export default createPlugin(
 						payload: {
 							namespace: "onboarding",
 							origin: origin_trigger,
-							expected_steps: [
-								{
-									name: "emulator_installed",
-									is_first_step: true,
-									is_last_step: false,
-									position: 1,
-								},
-								{
-									name: "auth_token_configured",
-									is_first_step: false,
-									is_last_step: false,
-									position: 2,
-								},
-								{
-									name: "aws_profile_configured",
-									is_first_step: false,
-									is_last_step: true,
-									position: 3,
-								},
-							],
 						},
 					});
 
@@ -69,27 +51,39 @@ export default createPlugin(
 						},
 						async (progress, cancellationToken) => {
 							/////////////////////////////////////////////////////////////////////
+							let cliStatus: "COMPLETED" | "SKIPPED" = "COMPLETED";
+							let authenticationStatus: "COMPLETED" | "SKIPPED" = "COMPLETED";
 							{
 								const installationStartedAt = new Date().toISOString();
-								const { cancelled } = await runInstallProcess(
+								const { cancelled, skipped } = await runInstallProcess(
 									progress,
 									cancellationToken,
 									outputChannel,
 									telemetry,
 									origin_trigger,
 								);
+								cliStatus = skipped === true ? "SKIPPED" : "COMPLETED";
 								if (cancelled || cancellationToken.isCancellationRequested) {
 									telemetry.track({
 										name: "emulator_installed",
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 1,
+											step_order: 1,
 											started_at: installationStartedAt,
 											ended_at: new Date().toISOString(),
 											status: "CANCELLED",
 										},
 									});
+									telemetry.track(
+										get_setup_ended(
+											cliStatus,
+											"SKIPPED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+										),
+									);
 									return;
 								}
 							}
@@ -110,30 +104,45 @@ export default createPlugin(
 							const authenticated = await minDelay(checkIsAuthenticated());
 							if (cancellationToken.isCancellationRequested) {
 								telemetry.track({
-									name: "setup_ended",
+									name: "auth_token_configured",
 									payload: {
 										namespace: "onboarding",
-										steps: [1, 2, 3],
+										origin: origin_trigger,
+										step_order: 2,
+										started_at: authStartedAuthAt,
+										ended_at: new Date().toISOString(),
 										status: "CANCELLED",
 									},
 								});
+								telemetry.track(
+									get_setup_ended(
+										cliStatus,
+										"CANCELLED",
+										"SKIPPED",
+										"SKIPPED",
+										"CANCELLED",
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 							if (authenticated) {
 								progress.report({
 									message: "Skipping authentication...",
 								});
+								authenticationStatus = "SKIPPED";
 								telemetry.track({
 									name: "auth_token_configured",
 									payload: {
 										namespace: "onboarding",
 										origin: origin_trigger,
-										position: 2,
+										step_order: 2,
 										started_at: authStartedAuthAt,
 										ended_at: new Date().toISOString(),
 										status: "SKIPPED",
 									},
 								});
+
 								await minDelay(Promise.resolve());
 							} else {
 								/////////////////////////////////////////////////////////////////////
@@ -153,13 +162,23 @@ export default createPlugin(
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 2,
+											step_order: 2,
 											auth_token: authToken,
 											started_at: authStartedAuthAt,
 											ended_at: new Date().toISOString(),
 											status: "CANCELLED",
 										},
 									});
+									telemetry.track(
+										get_setup_ended(
+											cliStatus,
+											"CANCELLED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+											await readAuthToken(),
+										),
+									);
 									return;
 								}
 
@@ -174,14 +193,23 @@ export default createPlugin(
 										payload: {
 											namespace: "onboarding",
 											origin: origin_trigger,
-											position: 2,
+											step_order: 2,
 											auth_token: authToken,
 											started_at: authStartedAuthAt,
 											ended_at: new Date().toISOString(),
 											status: "CANCELLED",
 										},
 									});
-
+									telemetry.track(
+										get_setup_ended(
+											cliStatus,
+											"CANCELLED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+											authToken,
+										),
+									);
 									return;
 								}
 							}
@@ -193,6 +221,7 @@ export default createPlugin(
 							// then there will be no license info to be reported by `localstack license info`.
 							// Also, an expired license could be cached.
 							// Activating the license pre-emptively to know its state during the setup process.
+							const licenseCheckStartedAt = new Date().toISOString();
 							const licenseIsValid = await minDelay(
 								activateLicense(outputChannel).then(() =>
 									checkIsLicenseValid(outputChannel),
@@ -213,10 +242,43 @@ export default createPlugin(
 							}
 
 							if (cancellationToken.isCancellationRequested) {
+								telemetry.track({
+									name: "license_setup_ended",
+									payload: {
+										namespace: "onboarding",
+										step_order: 3,
+										origin: origin_trigger,
+										auth_token: await readAuthToken(),
+										started_at: licenseCheckStartedAt,
+										ended_at: new Date().toISOString(),
+										status: "CANCELLED",
+									},
+								});
+								telemetry.track(
+									get_setup_ended(
+										cliStatus,
+										authenticationStatus,
+										"CANCELLED",
+										"SKIPPED",
+										"CANCELLED",
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 
-							//TODO add telemetry
+							telemetry.track({
+								name: "license_setup_ended",
+								payload: {
+									namespace: "onboarding",
+									step_order: 3,
+									origin: origin_trigger,
+									auth_token: await readAuthToken(),
+									started_at: licenseCheckStartedAt,
+									ended_at: new Date().toISOString(),
+									status: "COMPLETED",
+								},
+							});
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({
@@ -245,14 +307,16 @@ export default createPlugin(
 							}
 
 							if (cancellationToken.isCancellationRequested) {
-								telemetry.track({
-									name: "setup_ended",
-									payload: {
-										namespace: "onboarding",
-										steps: [1, 2, 3],
-										status: "CANCELLED",
-									},
-								});
+								telemetry.track(
+									get_setup_ended(
+										cliStatus,
+										authenticationStatus,
+										"COMPLETED",
+										"COMPLETED",
+										"CANCELLED",
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 
@@ -281,14 +345,16 @@ export default createPlugin(
 									});
 							}
 
-							telemetry.track({
-								name: "setup_ended",
-								payload: {
-									namespace: "onboarding",
-									steps: [1, 2, 3],
-									status: "COMPLETED",
-								},
-							});
+							telemetry.track(
+								get_setup_ended(
+									cliStatus,
+									authenticationStatus,
+									"COMPLETED",
+									"COMPLETED",
+									"COMPLETED",
+									await readAuthToken(),
+								),
+							);
 						},
 					);
 				},
