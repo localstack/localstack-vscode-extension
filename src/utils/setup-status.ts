@@ -107,8 +107,10 @@ export async function createSetupStatusTracker(
 		},
 		async dispose() {
 			clearTimeout(timeout);
-			await awsProfileTracker.dispose();
-			await localStackAuthenticationTracker.dispose();
+			await Promise.all([
+				awsProfileTracker.dispose(),
+				localStackAuthenticationTracker.dispose(),
+			]);
 		},
 	};
 }
