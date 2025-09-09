@@ -248,6 +248,7 @@ function createLicenseStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
 		[LICENSE_FILENAME],
-		async () => ((await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required"),
+		async () =>
+			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
 	);
 }
