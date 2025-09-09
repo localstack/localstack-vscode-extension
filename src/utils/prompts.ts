@@ -6,47 +6,6 @@ import type { CancellationToken, LogOutputChannel } from "vscode";
 
 import { spawn, SpawnError } from "./spawn.ts";
 
-export interface DarwinPromptOptions {
-	message: string;
-	title: string;
-	icon: "note";
-	buttons: string[];
-	outputChannel: LogOutputChannel;
-	outputLabel?: string;
-	cancellationToken?: CancellationToken;
-}
-
-export async function darwinPrompt(
-	options: DarwinPromptOptions,
-): Promise<{ cancelled: boolean }> {
-	try {
-		await spawn(
-			"osascript",
-			[
-				"-e",
-				`'display dialog ${JSON.stringify(options.message)} with title ${JSON.stringify(options.title)} with icon ${options.icon} buttons {${options.buttons.map((button) => JSON.stringify(button)).join(",")}} default button 1'`,
-			],
-			{
-				outputChannel: options.outputChannel,
-				outputLabel: options.outputLabel,
-				cancellationToken: options.cancellationToken,
-			},
-		);
-		return {
-			cancelled: false,
-		};
-	} catch (error) {
-		options.outputChannel.error(error instanceof Error ? error : String(error));
-
-		// osascript will terminate with code 1 if the user cancels the dialog.
-		if (error instanceof SpawnError && error.code === 1) {
-			return { cancelled: true };
-		}
-
-		throw error;
-	}
-}
-
 export interface SpawnElevatedDarwinOptions {
 	script: string;
 	outputChannel: LogOutputChannel;

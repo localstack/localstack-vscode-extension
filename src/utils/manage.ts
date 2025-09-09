@@ -4,18 +4,13 @@ import { commands, env, Uri, window } from "vscode";
 
 import { readAuthToken } from "./authenticate.ts";
 import { spawnLocalStack } from "./cli.ts";
-import { exec } from "./exec.ts";
 import { checkIsLicenseValid } from "./license.ts";
 import type { Telemetry } from "./telemetry.ts";
 
-export type LocalstackStatus = "running" | "starting" | "stopping" | "stopped";
-
-let previousStatus: LocalstackStatus | undefined;
-
 export async function fetchHealth(): Promise<boolean> {
-	// health is ok in the majority of use cases, however, determining status based on it can be flaky.
-	// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
-	// though we don't know if it happens often.
+	// Health is OK in the majority of use cases, however, determining status based on it can be flaky.
+	// For example, if localstack becomes unhealthy while running for reasons other than the stop,
+	// then reporting "stopping" may be misleading.
 	try {
 		const response = await fetch("http://127.0.0.1:4566/_localstack/health");
 		return response.ok;
@@ -40,50 +35,6 @@ async function fetchLocalStackSessionId(): Promise<string> {
 		await new Promise((resolve) => setTimeout(resolve, 1000));
 	}
 	return "";
-}
-
-async function getStatusFromCLI(): Promise<LocalstackStatus | undefined> {
-	try {
-		const result = await exec(
-			"docker inspect -f '{{.State.Status}}' localstack-main",
-		);
-		if (result.stdout.includes("running")) {
-			return "running";
-		} else if (result.stdout.includes("stopped")) {
-			return "stopped";
-		}
-	} catch {
-		return undefined;
-	}
-}
-
-export async function getLocalstackStatus(): Promise<LocalstackStatus> {
-	const [healthOk, status] = await Promise.all([
-		fetchHealth(),
-		getStatusFromCLI(),
-	]);
-
-	if (healthOk && status === "running") {
-		previousStatus = "running";
-		return "running";
-	}
-
-	if (!healthOk && status !== "running") {
-		previousStatus = "stopped";
-		return "stopped";
-	}
-
-	if (previousStatus === "stopped" && !healthOk && status === "running") {
-		previousStatus = "starting";
-		return "starting";
-	}
-
-	if (previousStatus === "running" && !healthOk) {
-		previousStatus = "stopping";
-		return "stopping";
-	}
-
-	return previousStatus ?? "stopped";
 }
 
 export async function startLocalStack(
@@ -233,25 +184,6 @@ async function showErrorMessage(
 	const selection = await window.showErrorMessage(message, ...items);
 	if (selection) {
 		await commands.executeCommand(selection.command);
-	}
-}
-
-export async function getLocalstackVersion(
-	outputChannel: LogOutputChannel,
-): Promise<string | undefined> {
-	try {
-		const { stdout } = await exec("localstack --version");
-		const versionMatch = stdout.match(/\d+\.\d+\.\d+/);
-		if (!versionMatch) {
-			outputChannel.error(
-				`Failed to parse LocalStack from version output: ${stdout}`,
-			);
-			return undefined;
-		}
-
-		return versionMatch[0];
-	} catch {
-		return undefined;
 	}
 }
 
