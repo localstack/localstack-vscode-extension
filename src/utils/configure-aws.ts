@@ -106,7 +106,7 @@ async function dnsResolveCheck(
 		const addresses = await resolve("test.localhost.localstack.cloud");
 		return addresses.includes("127.0.0.1");
 	} catch (error) {
-		outputChannel?.debug(
+		outputChannel?.warn(
 			`[aws-profile]: Could not resolve "test.localhost.localstack.cloud". Falling back to "http://127.0.0.1:4566" for the endpoint_url in AWS profile "localstack". Your system may have DNS Rebind Protection enabled, which can block custom DNS names like "localhost.localstack.cloud"`,
 		);
 		return false;
