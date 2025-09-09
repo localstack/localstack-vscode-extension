@@ -2,7 +2,6 @@ import { commands, QuickPickItemKind, ThemeColor, window } from "vscode";
 import type { QuickPickItem } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
-import { checkLocalstackInstalled } from "../utils/install.ts";
 
 export default createPlugin(
 	"status-bar",
