@@ -10,7 +10,7 @@
 - fix: Improve LocalStack endpoint detection in AWS profile config process
 - fix: Invalid status when stopping LocalStack externally
 - fix: Don't show start localstack if already started during setup
-- chore: improve logging DNS resolution failure
+- chore: Improve logging DNS resolution failure
 - chore: Update telemetry events
 - chore: Remove preview badge
 
