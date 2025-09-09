@@ -24,14 +24,17 @@
 	},
 	"icon": "resources/icons/localstack-icon-256x256.png",
 	"license": "Apache-2.0",
-	"homepage": "https://github.com/localstack/localstack-vscode-extension#readme",
+	"homepage": "https://github.com/localstack/localstack-toolkit-vscode#readme",
 	"bugs": {
-		"url": "https://github.com/localstack/localstack-vscode-extension/issues"
+		"url": "https://github.com/localstack/localstack-toolkit-vscode/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/localstack/localstack-vscode-extension.git"
+		"url": "https://github.com/localstack/localstack-toolkit-vscode.git"
 	},
+	"recommendations": [
+		"AmazonWebServices.aws-toolkit-vscode"
+	],
 	"activationEvents": [
 		"onStartupFinished"
 	],
