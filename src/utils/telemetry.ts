@@ -353,7 +353,7 @@ export function get_setup_ended_on_image_prefetch_cancelled(
 					is_first_step: true,
 					is_last_step: false,
 					step_order: 1,
-					status: "CANCELLED",
+					status: "COMPLETED",
 				},
 				{
 					name: "auth_token_configured",
