@@ -12,7 +12,7 @@ import {
 	checkIsProfileConfigured,
 } from "./configure-aws.ts";
 import { createEmitter } from "./emitter.ts";
-import { createOnceImmediate } from "./once-immediate.ts";
+import { immediateOnce } from "./immediate-once.ts";
 import type { UnwrapPromise } from "./promises.ts";
 import { checkSetupStatus } from "./setup.ts";
 import type { TimeTracker } from "./time-tracker.ts";
@@ -63,7 +63,7 @@ export async function createSetupStatusTracker(
 		}
 	};
 
-	const checkStatus = createOnceImmediate(async () => {
+	const checkStatus = immediateOnce(async () => {
 		await checkStatusNow();
 	});
 
@@ -140,7 +140,7 @@ function createFileStatusTracker(
 
 	const emitter = createEmitter<SetupStatus>(outputChannel);
 
-	const updateStatus = createOnceImmediate(async () => {
+	const updateStatus = immediateOnce(async () => {
 		const newStatus = await Promise.resolve(check());
 		if (status !== newStatus) {
 			status = newStatus;

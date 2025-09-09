@@ -1,12 +1,12 @@
 /**
- * Creates a function that calls the given callback once immediately.
+ * Creates a function that calls the given callback immediately once.
  *
  * Multiple calls during the same tick are ignored.
  *
  * @param callback - The callback to call.
- * @returns A function that calls the callback once immediately.
+ * @returns A function that calls the callback immediately once.
  */
-export function createOnceImmediate<T>(callback: () => T): () => void {
+export function immediateOnce<T>(callback: () => T): () => void {
 	let timeout: NodeJS.Immediate | undefined;
 
 	return () => {
