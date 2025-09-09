@@ -13,6 +13,7 @@ import {
 } from "./configure-aws.ts";
 import { createEmitter } from "./emitter.ts";
 import { immediateOnce } from "./immediate-once.ts";
+import { checkIsLicenseValid, LICENSE_FILENAME } from "./license.ts";
 import type { UnwrapPromise } from "./promises.ts";
 import { checkSetupStatus } from "./setup.ts";
 import type { TimeTracker } from "./time-tracker.ts";
@@ -39,6 +40,7 @@ export async function createSetupStatusTracker(
 	const awsProfileTracker = createAwsProfileStatusTracker(outputChannel);
 	const localStackAuthenticationTracker =
 		createLocalStackAuthenticationStatusTracker(outputChannel);
+	const licenseTracker = createLicenseStatusTracker(outputChannel);
 	const end = Date.now();
 	outputChannel.trace(
 		`[setup-status]: Initialized dependencies in ${ms(end - start, { long: true })}`,
@@ -51,6 +53,7 @@ export async function createSetupStatusTracker(
 			Object.values(statuses),
 			awsProfileTracker.status() === "ok",
 			localStackAuthenticationTracker.status() === "ok",
+			licenseTracker.status() === "ok",
 		].some((check) => check === false);
 
 		const newStatus = setupRequired ? "setup_required" : "ok";
@@ -72,6 +75,10 @@ export async function createSetupStatusTracker(
 	});
 
 	localStackAuthenticationTracker.onChange(() => {
+		checkStatus();
+	});
+
+	licenseTracker.onChange(() => {
 		checkStatus();
 	});
 
@@ -223,5 +230,24 @@ function createLocalStackAuthenticationStatusTracker(
 		"[setup-status.localstack-authentication]",
 		[LOCALSTACK_AUTH_FILENAME],
 		async () => ((await checkIsAuthenticated()) ? "ok" : "setup_required"),
+	);
+}
+
+/**
+ * Creates a status tracker that monitors the LocalStack license file for changes.
+ * When the file is changed, the provided check function is called to determine the current setup status.
+ * Emits status changes to registered listeners.
+ *
+ * @param outputChannel - Channel for logging output and trace messages.
+ * @returns A {@link StatusTracker} instance for querying status, subscribing to changes, and disposing resources.
+ */
+function createLicenseStatusTracker(
+	outputChannel: LogOutputChannel,
+): StatusTracker {
+	return createFileStatusTracker(
+		outputChannel,
+		"[setup-status.license]",
+		[LICENSE_FILENAME],
+		async () => ((await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required"),
 	);
 }
