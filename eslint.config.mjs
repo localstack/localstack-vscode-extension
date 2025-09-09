@@ -10,7 +10,7 @@ export default defineConfig(
 	{
 		rules: {
 			"object-shorthand": ["error", "always"],
-		}
+		},
 	},
 	{
 		extends: [
