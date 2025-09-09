@@ -111,7 +111,8 @@
 		"package": "node build/extension.mjs --production",
 		"pretest": "npm run compile",
 		"check-types": "tsc",
-		"lint": "eslint .",
+		"lint": "eslint",
+		"format": "biome check",
 		"test": "vscode-test",
 		"compile:font": "node build/icon-font.mjs"
 	},
