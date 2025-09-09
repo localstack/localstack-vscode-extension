@@ -214,179 +214,13 @@ export function createTelemetry(
 	};
 }
 
-export function get_setup_ended_on_cli_setup_cancelled(): Events {
-	return {
-		name: "setup_ended",
-		payload: {
-			namespace: "onboarding",
-			steps: [
-				{
-					name: "emulator_installed",
-					is_first_step: true,
-					is_last_step: false,
-					step_order: 1,
-					status: "CANCELLED",
-				},
-				{
-					name: "auth_token_configured",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 2,
-					status: "SKIPPED",
-				},
-				{
-					name: "license_setup_ended",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 3,
-					status: "SKIPPED",
-				},
-				{
-					name: "aws_profile_configured",
-					is_first_step: false,
-					is_last_step: true,
-					step_order: 4,
-					status: "SKIPPED",
-				},
-			],
-			status: "CANCELLED",
-		},
-	};
-}
-
-export function get_setup_ended_on_authentication_cancelled(
-	authToken: string = "",
-): Events {
-	return {
-		name: "setup_ended",
-		payload: {
-			namespace: "onboarding",
-			steps: [
-				{
-					name: "emulator_installed",
-					is_first_step: true,
-					is_last_step: false,
-					step_order: 1,
-					status: "COMPLETED",
-				},
-				{
-					name: "auth_token_configured",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 2,
-					status: "CANCELLED",
-				},
-				{
-					name: "license_setup_ended",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 3,
-					status: "SKIPPED",
-				},
-				{
-					name: "aws_profile_configured",
-					is_first_step: false,
-					is_last_step: true,
-					step_order: 4,
-					status: "SKIPPED",
-				},
-			],
-			status: "CANCELLED",
-			auth_token: authToken,
-		},
-	};
-}
-
-export function get_setup_ended_on_license_setup_cancelled(
-	auth_token: string,
-): Events {
-	return {
-		name: "setup_ended",
-		payload: {
-			namespace: "onboarding",
-			steps: [
-				{
-					name: "emulator_installed",
-					is_first_step: true,
-					is_last_step: false,
-					step_order: 1,
-					status: "COMPLETED",
-				},
-				{
-					name: "auth_token_configured",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 2,
-					status: "COMPLETED",
-				},
-				{
-					name: "license_setup_ended",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 3,
-					status: "CANCELLED",
-				},
-				{
-					name: "aws_profile_configured",
-					is_first_step: false,
-					is_last_step: true,
-					step_order: 4,
-					status: "SKIPPED",
-				},
-			],
-			status: "CANCELLED",
-			auth_token: auth_token,
-		},
-	};
-}
-
-export function get_setup_ended_on_image_prefetch_cancelled(
-	auth_token: string,
-): Events {
-	return {
-		name: "setup_ended",
-		payload: {
-			namespace: "onboarding",
-			steps: [
-				{
-					name: "emulator_installed",
-					is_first_step: true,
-					is_last_step: false,
-					step_order: 1,
-					status: "COMPLETED",
-				},
-				{
-					name: "auth_token_configured",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 2,
-					status: "COMPLETED",
-				},
-				{
-					name: "license_setup_ended",
-					is_first_step: false,
-					is_last_step: false,
-					step_order: 3,
-					status: "COMPLETED",
-				},
-				{
-					name: "aws_profile_configured",
-					is_first_step: false,
-					is_last_step: true,
-					step_order: 4,
-					status: "COMPLETED",
-				},
-			],
-			status: "CANCELLED",
-			auth_token: auth_token,
-		},
-	};
-}
-
-export function get_setup_ended_completed(
-	cli_status: "COMPLETED" | "SKIPPED",
-	authentication_status: "COMPLETED" | "SKIPPED",
-	auth_token: string,
+export function get_setup_ended(
+	cli_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
+	authentication_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
+	license_setup_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
+	aws_profile_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
+	overall_status: "CANCELLED" | "COMPLETED",
+	auth_token: string = "",
 ): Events {
 	return {
 		name: "setup_ended",
@@ -412,18 +246,18 @@ export function get_setup_ended_completed(
 					is_first_step: false,
 					is_last_step: false,
 					step_order: 3,
-					status: "COMPLETED",
+					status: license_setup_status,
 				},
 				{
 					name: "aws_profile_configured",
 					is_first_step: false,
 					is_last_step: true,
 					step_order: 4,
-					status: "COMPLETED",
+					status: aws_profile_status,
 				},
 			],
-			status: "COMPLETED",
-			auth_token: auth_token,
+			status: overall_status,
+			auth_token,
 		},
 	};
 }

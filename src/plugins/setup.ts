@@ -16,13 +16,7 @@ import {
 } from "../utils/license.ts";
 import { minDelay } from "../utils/promises.ts";
 import { updateDockerImage } from "../utils/setup.ts";
-import {
-	get_setup_ended_on_image_prefetch_cancelled,
-	get_setup_ended_on_authentication_cancelled,
-	get_setup_ended_on_cli_setup_cancelled,
-	get_setup_ended_on_license_setup_cancelled,
-	get_setup_ended_completed,
-} from "../utils/telemetry.ts";
+import { get_setup_ended } from "../utils/telemetry.ts";
 
 export default createPlugin(
 	"setup",
@@ -57,11 +51,10 @@ export default createPlugin(
 						},
 						async (progress, cancellationToken) => {
 							/////////////////////////////////////////////////////////////////////
-							let cliInstallSkipped: boolean = false;
-							let authenticationSkipped: boolean = false;
+							let cliStatus: "COMPLETED" | "SKIPPED" = "COMPLETED";
+							let authenticationStatus: "COMPLETED" | "SKIPPED" = "COMPLETED";
 							{
 								const installationStartedAt = new Date().toISOString();
-
 								const { cancelled, skipped } = await runInstallProcess(
 									progress,
 									cancellationToken,
@@ -69,7 +62,7 @@ export default createPlugin(
 									telemetry,
 									origin_trigger,
 								);
-								cliInstallSkipped = skipped === true;
+								cliStatus = skipped === true ? "SKIPPED" : "COMPLETED";
 								if (cancelled || cancellationToken.isCancellationRequested) {
 									telemetry.track({
 										name: "emulator_installed",
@@ -82,7 +75,15 @@ export default createPlugin(
 											status: "CANCELLED",
 										},
 									});
-									telemetry.track(get_setup_ended_on_cli_setup_cancelled());
+									telemetry.track(
+										get_setup_ended(
+											cliStatus,
+											"SKIPPED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+										),
+									);
 									return;
 								}
 							}
@@ -113,14 +114,23 @@ export default createPlugin(
 										status: "CANCELLED",
 									},
 								});
-								telemetry.track(get_setup_ended_on_authentication_cancelled());
+								telemetry.track(
+									get_setup_ended(
+										cliStatus,
+										"CANCELLED",
+										"SKIPPED",
+										"SKIPPED",
+										"CANCELLED",
+										await readAuthToken(),
+									),
+								);
 								return;
 							}
 							if (authenticated) {
 								progress.report({
 									message: "Skipping authentication...",
 								});
-								authenticationSkipped = true;
+								authenticationStatus = "SKIPPED";
 								telemetry.track({
 									name: "auth_token_configured",
 									payload: {
@@ -160,7 +170,14 @@ export default createPlugin(
 										},
 									});
 									telemetry.track(
-										get_setup_ended_on_authentication_cancelled(),
+										get_setup_ended(
+											cliStatus,
+											"CANCELLED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+											await readAuthToken(),
+										),
 									);
 									return;
 								}
@@ -184,7 +201,14 @@ export default createPlugin(
 										},
 									});
 									telemetry.track(
-										get_setup_ended_on_authentication_cancelled(authToken),
+										get_setup_ended(
+											cliStatus,
+											"CANCELLED",
+											"SKIPPED",
+											"SKIPPED",
+											"CANCELLED",
+											authToken,
+										),
 									);
 									return;
 								}
@@ -231,7 +255,12 @@ export default createPlugin(
 									},
 								});
 								telemetry.track(
-									get_setup_ended_on_license_setup_cancelled(
+									get_setup_ended(
+										cliStatus,
+										authenticationStatus,
+										"CANCELLED",
+										"SKIPPED",
+										"CANCELLED",
 										await readAuthToken(),
 									),
 								);
@@ -279,7 +308,12 @@ export default createPlugin(
 
 							if (cancellationToken.isCancellationRequested) {
 								telemetry.track(
-									get_setup_ended_on_image_prefetch_cancelled(
+									get_setup_ended(
+										cliStatus,
+										authenticationStatus,
+										"COMPLETED",
+										"COMPLETED",
+										"CANCELLED",
 										await readAuthToken(),
 									),
 								);
@@ -311,14 +345,13 @@ export default createPlugin(
 									});
 							}
 
-							const cliStatus = cliInstallSkipped ? "SKIPPED" : "COMPLETED";
-							const authenticationStatus = authenticationSkipped
-								? "SKIPPED"
-								: "COMPLETED";
 							telemetry.track(
-								get_setup_ended_completed(
+								get_setup_ended(
 									cliStatus,
 									authenticationStatus,
+									"COMPLETED",
+									"COMPLETED",
+									"COMPLETED",
 									await readAuthToken(),
 								),
 							);
