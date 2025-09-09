@@ -1,5 +1,4 @@
 import type { Disposable, LogOutputChannel } from "vscode";
-import { de } from "zod/v4/locales";
 
 import type {
 	ContainerStatus,
