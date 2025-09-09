@@ -5,14 +5,13 @@ import { commands, env, Uri, window } from "vscode";
 import { spawnLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
 import { checkIsLicenseValid } from "./license.ts";
-import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
 
 export type LocalstackStatus = "running" | "starting" | "stopping" | "stopped";
 
 let previousStatus: LocalstackStatus | undefined;
 
-async function fetchHealth(): Promise<boolean> {
+export async function fetchHealth(): Promise<boolean> {
 	// health is ok in the majority of use cases, however, determining status based on it can be flaky.
 	// for example, if localstack becomes unhealthy while running for reasons other that stop then reporting "stopping" may be misleading.
 	// though we don't know if it happens often.
