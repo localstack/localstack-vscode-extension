@@ -383,7 +383,11 @@ export function get_setup_ended_on_image_prefetch_cancelled(
 	};
 }
 
-export function get_setup_ended_completed(auth_token: string): Events {
+export function get_setup_ended_completed(
+	cli_status: "COMPLETED" | "SKIPPED",
+	authentication_status: "COMPLETED" | "SKIPPED",
+	auth_token: string,
+): Events {
 	return {
 		name: "setup_ended",
 		payload: {
@@ -394,14 +398,14 @@ export function get_setup_ended_completed(auth_token: string): Events {
 					is_first_step: true,
 					is_last_step: false,
 					step_order: 1,
-					status: "COMPLETED",
+					status: cli_status,
 				},
 				{
 					name: "auth_token_configured",
 					is_first_step: false,
 					is_last_step: false,
 					step_order: 2,
-					status: "COMPLETED",
+					status: authentication_status,
 				},
 				{
 					name: "license_setup_ended",

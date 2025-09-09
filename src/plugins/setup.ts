@@ -57,15 +57,19 @@ export default createPlugin(
 						},
 						async (progress, cancellationToken) => {
 							/////////////////////////////////////////////////////////////////////
+							let cliInstallSkipped: boolean = false;
+							let authenticationSkipped: boolean = false;
 							{
 								const installationStartedAt = new Date().toISOString();
-								const { cancelled } = await runInstallProcess(
+
+								const { cancelled, skipped } = await runInstallProcess(
 									progress,
 									cancellationToken,
 									outputChannel,
 									telemetry,
 									origin_trigger,
 								);
+								cliInstallSkipped = skipped === true;
 								if (cancelled || cancellationToken.isCancellationRequested) {
 									telemetry.track({
 										name: "emulator_installed",
@@ -116,6 +120,7 @@ export default createPlugin(
 								progress.report({
 									message: "Skipping authentication...",
 								});
+								authenticationSkipped = true;
 								telemetry.track({
 									name: "auth_token_configured",
 									payload: {
@@ -306,7 +311,17 @@ export default createPlugin(
 									});
 							}
 
-							telemetry.track(get_setup_ended_completed(await readAuthToken()));
+							const cliStatus = cliInstallSkipped ? "SKIPPED" : "COMPLETED";
+							const authenticationStatus = authenticationSkipped
+								? "SKIPPED"
+								: "COMPLETED";
+							telemetry.track(
+								get_setup_ended_completed(
+									cliStatus,
+									authenticationStatus,
+									await readAuthToken(),
+								),
+							);
 						},
 					);
 				},

@@ -40,7 +40,7 @@ export async function runInstallProcess(
 	outputChannel: LogOutputChannel,
 	telemetry: Telemetry,
 	origin?: "extension_startup" | "manual_trigger",
-): Promise<{ cancelled: boolean }> {
+): Promise<{ cancelled: boolean; skipped?: boolean }> {
 	/////////////////////////////////////////////////////////////////////
 	const origin_trigger = origin ? origin : "manual_trigger";
 	progress.report({
@@ -71,7 +71,7 @@ export async function runInstallProcess(
 			},
 		});
 		await minDelay();
-		return { cancelled: false };
+		return { cancelled: false, skipped: true };
 	}
 
 	/////////////////////////////////////////////////////////////////////
