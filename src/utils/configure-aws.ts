@@ -35,7 +35,9 @@ const LOCALSTACK_CREDENTIALS_PROPERTIES = {
 	aws_secret_access_key: "test",
 };
 
-const AWS_DIRECTORY = path.join(os.homedir(), ".aws");
+export const AWS_DIRECTORY = path.join(os.homedir(), ".aws");
+export const AWS_CONFIG_FILENAME = path.join(AWS_DIRECTORY, "config");
+export const AWS_CREDENTIALS_FILENAME = path.join(AWS_DIRECTORY, "credentials");
 
 async function overrideSelection(
 	filesToModify: string[],
@@ -464,13 +466,13 @@ export async function configureAwsProfiles(options: {
 
 export async function checkIsProfileConfigured(): Promise<boolean> {
 	try {
-		const awsConfigFilename = path.join(AWS_DIRECTORY, "config");
-		const awsCredentialsFilename = path.join(AWS_DIRECTORY, "credentials");
-
 		const [{ section: configSection }, { section: credentialsSection }] =
 			await Promise.all([
-				getProfile(awsConfigFilename, LOCALSTACK_CONFIG_PROFILE_NAME),
-				getProfile(awsCredentialsFilename, LOCALSTACK_CREDENTIALS_PROFILE_NAME),
+				getProfile(AWS_CONFIG_FILENAME, LOCALSTACK_CONFIG_PROFILE_NAME),
+				getProfile(
+					AWS_CREDENTIALS_FILENAME,
+					LOCALSTACK_CREDENTIALS_PROFILE_NAME,
+				),
 			]);
 
 		const [configNeedsOverride, credentialsNeedsOverride] = await Promise.all([

@@ -84,7 +84,7 @@ async function redirectToLocalStack(): Promise<{ cancelled: boolean }> {
 	return { cancelled: !openSuccessful };
 }
 
-const LOCALSTACK_AUTH_FILENAME = `${os.homedir()}/.localstack/auth.json`;
+export const LOCALSTACK_AUTH_FILENAME = `${os.homedir()}/.localstack/auth.json`;
 const LOCALSTACK_AUTH_FILENAME_READABLE = LOCALSTACK_AUTH_FILENAME.replace(
 	`${os.homedir()}/`,
 	"~/",
