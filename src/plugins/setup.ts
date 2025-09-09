@@ -224,7 +224,7 @@ export default createPlugin(
 							});
 							await minDelay(
 								configureAwsProfiles({
-									telemetry: telemetry,
+									telemetry,
 									origin: origin_trigger,
 								}),
 							);

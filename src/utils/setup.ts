@@ -82,7 +82,7 @@ async function pullDockerImage(
 		await spawn("docker", ["pull", LOCALSTACK_DOCKER_IMAGE_NAME], {
 			outputChannel,
 			outputLabel: "docker.pull",
-			cancellationToken: cancellationToken,
+			cancellationToken,
 		});
 	} catch (error) {
 		outputChannel.error("Could not pull LocalStack docker image");

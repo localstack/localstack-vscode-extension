@@ -1,13 +1,25 @@
 import { fileURLToPath, URL } from "node:url";
 
 import { includeIgnoreFile } from "@eslint/compat";
+import { defineConfig } from "eslint/config";
 import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
 	includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
 	{
-		extends: [tseslint.configs.recommendedTypeChecked],
+		rules: {
+			"object-shorthand": ["error", "always"],
+		},
+	},
+	{
+		extends: [
+			// Base recommended rules from @typescript-eslint.
+			tseslint.configs.recommendedTypeChecked,
+			// In the future, we might want to switch to more strict configs.
+			// tseslint.configs.strictTypeChecked,
+			// tseslint.configs.stylisticTypeChecked,
+		],
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
