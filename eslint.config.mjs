@@ -7,7 +7,18 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
 	includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
 	{
-		extends: [tseslint.configs.recommendedTypeChecked],
+		rules: {
+			"object-shorthand": ["error", "always"],
+		}
+	},
+	{
+		extends: [
+			// Base recommended rules from @typescript-eslint.
+			tseslint.configs.recommendedTypeChecked,
+			// In the future, we might want to switch to more strict configs.
+			// tseslint.configs.strictTypeChecked,
+			// tseslint.configs.stylisticTypeChecked,
+		],
 		languageOptions: {
 			parserOptions: {
 				projectService: true,

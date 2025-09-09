@@ -9,7 +9,7 @@ export default createPlugin(
 		context.subscriptions.push(
 			commands.registerCommand("localstack.configureAwsProfiles", async () => {
 				await configureAwsProfiles({
-					telemetry: telemetry,
+					telemetry,
 					notifyNoChangesMade: true,
 					outputChannel,
 				});
