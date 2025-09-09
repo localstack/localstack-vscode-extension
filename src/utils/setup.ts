@@ -3,27 +3,17 @@ import * as z from "zod/v4-mini";
 
 import { LOCALSTACK_DOCKER_IMAGE_NAME } from "../constants.ts";
 
-import { checkIsAuthenticated } from "./authenticate.ts";
-import { checkIsProfileConfigured } from "./configure-aws.ts";
 import { exec } from "./exec.ts";
 import { checkLocalstackInstalled } from "./install.ts";
-import { checkIsLicenseValid } from "./license.ts";
 import { spawn } from "./spawn.ts";
 
 export async function checkSetupStatus(outputChannel: LogOutputChannel) {
-	const [isInstalled, isAuthenticated, isLicenseValid, isProfileConfigured] =
-		await Promise.all([
-			checkLocalstackInstalled(outputChannel),
-			checkIsAuthenticated(),
-			checkIsLicenseValid(outputChannel),
-			checkIsProfileConfigured(),
-		]);
+	const [isInstalled] = await Promise.all([
+		checkLocalstackInstalled(outputChannel),
+	]);
 
 	return {
 		isInstalled,
-		isAuthenticated,
-		isLicenseValid,
-		isProfileConfigured,
 	};
 }
 
