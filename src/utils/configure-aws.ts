@@ -4,6 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 
 import { window } from "vscode";
+import type { LogOutputChannel } from "vscode";
 
 import { parseIni, serializeIni, updateIniSection } from "./ini-parser.ts";
 import type { IniFile, IniSection } from "./ini-parser.ts";
@@ -98,11 +99,16 @@ async function getProfile(filename: string, profileName: string) {
 	return { contents, iniFile, section };
 }
 
-async function dnsResolveCheck(): Promise<boolean> {
+async function dnsResolveCheck(
+	outputChannel: LogOutputChannel | undefined,
+): Promise<boolean> {
 	try {
 		const addresses = await resolve("test.localhost.localstack.cloud");
 		return addresses.includes("127.0.0.1");
 	} catch (error) {
+		outputChannel?.debug(
+			`[aws-profile]: Could not resolve "test.localhost.localstack.cloud". Falling back to "http://127.0.0.1:4566" for the endpoint_url in AWS profile "localstack". Your system may have DNS Rebind Protection enabled, which can block custom DNS names like "localhost.localstack.cloud"`,
+		);
 		return false;
 	}
 }
@@ -115,6 +121,7 @@ async function configureAwsConfigProfile(
 	iniFile: IniFile,
 	section: IniSection | undefined,
 	overrideDecision: OverrideDecision | undefined = undefined,
+	outputChannel: LogOutputChannel | undefined,
 ): Promise<boolean | undefined> {
 	const awsConfigFilenameReadable = awsConfigFilename.replace(
 		os.homedir(),
@@ -128,7 +135,7 @@ async function configureAwsConfigProfile(
 				// User chose to override the existing profile.
 
 				// check if dnsResolveCheck is successful
-				const isDnsResolved = await dnsResolveCheck();
+				const isDnsResolved = await dnsResolveCheck(outputChannel);
 				const endpointUrl = isDnsResolved
 					? `http://localhost.localstack.cloud:${DEFAULT_PORT}`
 					: `http://127.0.0.1:${DEFAULT_PORT}`;
@@ -155,7 +162,7 @@ async function configureAwsConfigProfile(
 
 		// LocalStack profile does not exist: create it.
 		// check if dnsResolveCheck is successful
-		const isDnsResolved = await dnsResolveCheck();
+		const isDnsResolved = await dnsResolveCheck(outputChannel);
 		const endpointUrl = isDnsResolved
 			? `http://localhost.localstack.cloud:${DEFAULT_PORT}`
 			: `http://127.0.0.1:${DEFAULT_PORT}`;
@@ -276,6 +283,7 @@ export async function configureAwsProfiles(options: {
 	forceOverride?: boolean; // for testing purposes
 	notifyNoChangesMade?: boolean;
 	origin?: "manual_trigger" | "extension_startup";
+	outputChannel?: LogOutputChannel;
 }) {
 	const trigger = options.origin ?? "manual_trigger";
 	const startedAt = new Date().toISOString();
@@ -373,6 +381,7 @@ export async function configureAwsProfiles(options: {
 					configIniFile,
 					configSection,
 					overrideDecision,
+					options.outputChannel,
 				),
 				configureCredentialsProfile(
 					awsCredentialsFilename,
@@ -403,6 +412,7 @@ export async function configureAwsProfiles(options: {
 				configIniFile,
 				configSection,
 				overrideDecision,
+				options.outputChannel,
 			);
 			window.showInformationMessage(
 				'Successfully added the AWS profile named "localstack" to "~/.aws/config".',
