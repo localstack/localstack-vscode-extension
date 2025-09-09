@@ -1,10 +1,11 @@
 import { fileURLToPath, URL } from "node:url";
 
 import { includeIgnoreFile } from "@eslint/compat";
+import { defineConfig } from "eslint/config";
 import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
 	includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
 	{
 		rules: {
