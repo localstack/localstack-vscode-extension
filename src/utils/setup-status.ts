@@ -6,6 +6,7 @@ import {
 	checkIsAuthenticated,
 	LOCALSTACK_AUTH_FILENAME,
 } from "./authenticate.ts";
+import type { LocalStackCliTracker } from "./cli.ts";
 import {
 	AWS_CONFIG_FILENAME,
 	AWS_CREDENTIALS_FILENAME,
@@ -15,14 +16,12 @@ import { createEmitter } from "./emitter.ts";
 import { immediateOnce } from "./immediate-once.ts";
 import { checkIsLicenseValid, LICENSE_FILENAME } from "./license.ts";
 import type { UnwrapPromise } from "./promises.ts";
-import { checkSetupStatus } from "./setup.ts";
 import type { TimeTracker } from "./time-tracker.ts";
 
 export type SetupStatus = "ok" | "setup_required";
 
 export interface SetupStatusTracker extends Disposable {
-	status(): SetupStatus;
-	statuses(): UnwrapPromise<ReturnType<typeof checkSetupStatus>>;
+	status(): SetupStatus|undefined;
 	onChange(callback: (status: SetupStatus) => void): void;
 }
 
@@ -32,31 +31,34 @@ export interface SetupStatusTracker extends Disposable {
 export async function createSetupStatusTracker(
 	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
+	cliTracker: LocalStackCliTracker,
 ): Promise<SetupStatusTracker> {
 	const start = Date.now();
-	let statuses: UnwrapPromise<ReturnType<typeof checkSetupStatus>> | undefined;
 	let status: SetupStatus | undefined;
 	const emitter = createEmitter<SetupStatus>(outputChannel);
 	const awsProfileTracker = createAwsProfileStatusTracker(outputChannel);
 	const localStackAuthenticationTracker =
 		createLocalStackAuthenticationStatusTracker(outputChannel);
-	const licenseTracker = createLicenseStatusTracker(outputChannel);
+	const licenseTracker = createLicenseStatusTracker(cliTracker, localStackAuthenticationTracker, outputChannel);
 	const end = Date.now();
 	outputChannel.trace(
 		`[setup-status]: Initialized dependencies in ${ms(end - start, { long: true })}`,
 	);
 
 	const checkStatusNow = async () => {
-		const allStatusesInitialized = Object.values({
+		const statuses = {
+			cliTracker: cliTracker.status(),
 			awsProfileTracker: awsProfileTracker.status(),
 			authTracker: localStackAuthenticationTracker.status(),
 			licenseTracker: licenseTracker.status(),
-		}).every((check) => check !== undefined);
+		};
 
-		if (!allStatusesInitialized) {
+		const notInitialized = Object.values(statuses).some((check) => check === undefined);
+		if (notInitialized) {
 			outputChannel.trace(
 				`[setup-status] File watchers not initialized yet, skipping status check : ${JSON.stringify(
 					{
+						cliTracker: cliTracker.status() ?? "undefined",
 						awsProfileTracker: awsProfileTracker.status() ?? "undefined",
 						authTracker:
 							localStackAuthenticationTracker.status() ?? "undefined",
@@ -67,21 +69,13 @@ export async function createSetupStatusTracker(
 			return;
 		}
 
-		statuses = await checkSetupStatus(outputChannel);
-
-		const setupRequired = [
-			...Object.values(statuses),
-			awsProfileTracker.status() === "ok",
-			localStackAuthenticationTracker.status() === "ok",
-			licenseTracker.status() === "ok",
-		].some((check) => check === false);
-
+		const setupRequired = Object.values(statuses).some((status) => status === "setup_required");
 		const newStatus = setupRequired ? "setup_required" : "ok";
 		if (status !== newStatus) {
 			status = newStatus;
 			outputChannel.trace(
 				`[setup-status] Status changed to ${JSON.stringify({
-					...statuses,
+					cliTracker: cliTracker.status() ?? "undefined",
 					awsProfileTracker: awsProfileTracker.status() ?? "undefined",
 					authTracker: localStackAuthenticationTracker.status() ?? "undefined",
 					licenseTracker: licenseTracker.status() ?? "undefined",
@@ -127,10 +121,6 @@ export async function createSetupStatusTracker(
 			// biome-ignore lint/style/noNonNullAssertion: false positive
 			return status!;
 		},
-		statuses() {
-			// biome-ignore lint/style/noNonNullAssertion: false positive
-			return statuses!;
-		},
 		onChange(callback) {
 			emitter.on(callback);
 			if (status) {
@@ -149,8 +139,9 @@ export async function createSetupStatusTracker(
 
 interface StatusTracker {
 	status(): SetupStatus | undefined;
-	onChange(callback: (status: SetupStatus) => void): void;
+	onChange(callback: (status: SetupStatus|undefined) => void): void;
 	dispose(): Promise<void>;
+	check(): void;
 }
 
 /**
@@ -168,11 +159,11 @@ function createFileStatusTracker(
 	outputChannel: LogOutputChannel,
 	outputChannelPrefix: string,
 	files: string[],
-	check: () => Promise<SetupStatus> | SetupStatus,
+	check: () => Promise<SetupStatus|undefined> | SetupStatus|undefined,
 ): StatusTracker {
 	let status: SetupStatus | undefined;
 
-	const emitter = createEmitter<SetupStatus>(outputChannel);
+	const emitter = createEmitter<SetupStatus|undefined>(outputChannel);
 
 	const updateStatus = immediateOnce(async () => {
 		const newStatus = await Promise.resolve(check());
@@ -218,6 +209,9 @@ function createFileStatusTracker(
 		},
 		async dispose() {
 			await watcher.close();
+		},
+		 check() {
+			return updateStatus();
 		},
 	};
 }
@@ -270,13 +264,30 @@ function createLocalStackAuthenticationStatusTracker(
  * @returns A {@link StatusTracker} instance for querying status, subscribing to changes, and disposing resources.
  */
 function createLicenseStatusTracker(
+	cliTracker: LocalStackCliTracker,
+	authTracker: StatusTracker,
 	outputChannel: LogOutputChannel,
 ): StatusTracker {
-	return createFileStatusTracker(
+	const tracker = createFileStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
-		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTracker
+		[LICENSE_FILENAME],
 		async () =>
-			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
+			{
+				const cliPath = cliTracker.cliPath();
+				if (!cliPath) {
+					return undefined
+				}
+
+				const isLicenseValid = await checkIsLicenseValid(cliPath, outputChannel);
+				
+				return isLicenseValid? "ok" : "setup_required"
+			},
 	);
+
+	cliTracker.onCliPathChange(() => {
+		tracker.check();
+	})
+
+	return tracker;
 }

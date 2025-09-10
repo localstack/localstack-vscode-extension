@@ -2,12 +2,14 @@ import { commands, QuickPickItemKind, ThemeColor, window } from "vscode";
 import type { QuickPickItem } from "vscode";
 
 import { createPlugin } from "../plugins.ts";
+import { immediateOnce } from "../utils/immediate-once.ts";
 
 export default createPlugin(
 	"status-bar",
 	({
 		context,
 		statusBarItem,
+		cliStatusTracker,
 		localStackStatusTracker,
 		setupStatusTracker,
 		outputChannel,
@@ -15,10 +17,10 @@ export default createPlugin(
 		context.subscriptions.push(
 			commands.registerCommand("localstack.showCommands", async () => {
 				const shouldShowLocalStackStart = () =>
-					setupStatusTracker.statuses().isInstalled &&
+					cliStatusTracker.status() === "ok" &&
 					localStackStatusTracker.status() === "stopped";
 				const shouldShowLocalStackStop = () =>
-					setupStatusTracker.statuses().isInstalled &&
+					cliStatusTracker.status() === "ok" &&
 					localStackStatusTracker.status() === "running";
 				const shouldShowRunSetupWizard = () =>
 					setupStatusTracker.status() === "setup_required";
@@ -77,63 +79,84 @@ export default createPlugin(
 			}),
 		);
 
-		context.subscriptions.push(
-			commands.registerCommand("localstack.refreshStatusBar", () => {
-				const setupStatus = setupStatusTracker.status();
-				const localStackStatus = localStackStatusTracker.status();
-				const localStackInstalled = setupStatusTracker.statuses().isInstalled;
+		// context.subscriptions.push(
+		// 	commands.registerCommand("localstack.refreshStatusBar", () => {
+		// 		const setupStatus = setupStatusTracker.status();
+		// 		const localStackStatus = localStackStatusTracker.status();
+		// 		const localStackInstalled = cliStatusTracker.status() === "ok"
 
-				statusBarItem.command = "localstack.showCommands";
-				statusBarItem.backgroundColor =
-					setupStatus === "setup_required"
-						? new ThemeColor("statusBarItem.errorBackground")
-						: undefined;
+		// 		statusBarItem.command = "localstack.showCommands";
+		// 		statusBarItem.backgroundColor =
+		// 			setupStatus === "setup_required"
+		// 				? new ThemeColor("statusBarItem.errorBackground")
+		// 				: undefined;
 
-				const shouldSpin =
-					localStackStatus === "starting" || localStackStatus === "stopping";
-				const icon =
-					setupStatus === "setup_required"
-						? "$(error)"
-						: shouldSpin
-							? "$(sync~spin)"
-							: "$(localstack-logo)";
+		// 		const shouldSpin =
+		// 			localStackStatus === "starting" || localStackStatus === "stopping";
+		// 		const icon =
+		// 			setupStatus === "setup_required"
+		// 				? "$(error)"
+		// 				: shouldSpin
+		// 					? "$(sync~spin)"
+		// 					: "$(localstack-logo)";
 
-				const statusText = localStackInstalled
-					? `${localStackStatus}`
-					: "not installed";
-				statusBarItem.text = `${icon} LocalStack: ${statusText}`;
+		// 		const statusText = localStackInstalled
+		// 			? `${localStackStatus}`
+		// 			: "not installed";
+		// 		statusBarItem.text = `${icon} LocalStack: ${statusText}`;
 
-				statusBarItem.tooltip = "Show LocalStack commands";
-				statusBarItem.show();
-			}),
-		);
+		// 		statusBarItem.tooltip = "Show LocalStack commands";
+		// 		statusBarItem.show();
+		// 	}),
+		// );
 
-		let refreshStatusBarImmediateId: NodeJS.Immediate | undefined;
-		const refreshStatusBarImmediate = () => {
-			if (!refreshStatusBarImmediateId) {
-				refreshStatusBarImmediateId = setImmediate(() => {
-					void commands.executeCommand("localstack.refreshStatusBar");
-					refreshStatusBarImmediateId = undefined;
-				});
+		const refreshStatusBar = immediateOnce(() => {
+			// await commands.executeCommand("localstack.refreshStatusBar");
+			const setupStatus = setupStatusTracker.status();
+			const localStackStatus = localStackStatusTracker.status();
+			const cliStatus = cliStatusTracker.status();
+
+			if (
+				setupStatus === undefined ||
+				localStackStatus === undefined ||
+				cliStatus === undefined
+			) {
+				return;
 			}
-		};
 
-		context.subscriptions.push({
-			dispose() {
-				clearImmediate(refreshStatusBarImmediateId);
-			},
+			statusBarItem.command = "localstack.showCommands";
+			statusBarItem.backgroundColor =
+				setupStatus === "setup_required"
+					? new ThemeColor("statusBarItem.errorBackground")
+					: undefined;
+
+			const shouldSpin =
+				localStackStatus === "starting" || localStackStatus === "stopping";
+			const icon =
+				setupStatus === "setup_required"
+					? "$(error)"
+					: shouldSpin
+						? "$(sync~spin)"
+						: "$(localstack-logo)";
+
+			const statusText =
+				cliStatus === "ok" ? `${localStackStatus}` : "not installed";
+			statusBarItem.text = `${icon} LocalStack: ${statusText}`;
+
+			statusBarItem.tooltip = "Show LocalStack commands";
+			// statusBarItem.show();
 		});
 
-		refreshStatusBarImmediate();
+		// refreshStatusBar();
 
 		localStackStatusTracker.onChange(() => {
 			outputChannel.trace("[status-bar]: localStackStatusTracker changed");
-			refreshStatusBarImmediate();
+			refreshStatusBar();
 		});
 
 		setupStatusTracker.onChange(() => {
 			outputChannel.trace("[status-bar]: setupStatusTracker changed");
-			refreshStatusBarImmediate();
+			refreshStatusBar();
 		});
 	},
 );

@@ -4,18 +4,7 @@ import * as z from "zod/v4-mini";
 import { LOCALSTACK_DOCKER_IMAGE_NAME } from "../constants.ts";
 
 import { exec } from "./exec.ts";
-import { checkLocalstackInstalled } from "./install.ts";
 import { spawn } from "./spawn.ts";
-
-export async function checkSetupStatus(outputChannel: LogOutputChannel) {
-	const [isInstalled] = await Promise.all([
-		checkLocalstackInstalled(outputChannel),
-	]);
-
-	return {
-		isInstalled,
-	};
-}
 
 export async function updateDockerImage(
 	outputChannel: LogOutputChannel,

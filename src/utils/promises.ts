@@ -1,4 +1,5 @@
 import pMinDelay from "p-min-delay";
+import type { Disposable } from "vscode";
 
 /**
  * Setting up a minimum wait time allows users
@@ -37,3 +38,43 @@ export function minDelay<T>(
  * Extracts the resolved type from a Promise.
  */
 export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
+
+export function setIntervalPromise(
+	callback: () => Promise<void>,
+	intervalMs: number,
+): Disposable {
+	let timeout: NodeJS.Timeout | undefined;
+	let disposed = false;
+
+	const runLater = () => {
+		timeout = setTimeout(() => void run(), intervalMs);
+	};
+
+	const run = async () => {
+		if (disposed) {
+			return;
+		}
+
+		try {
+			await callback();
+		} catch {
+			// Ignore errors
+		} finally {
+			if (!disposed) {
+				runLater();
+			}
+		}
+	};
+
+	runLater();
+
+	return {
+		dispose: () => {
+			disposed = true;
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = undefined;
+			}
+		},
+	};
+}

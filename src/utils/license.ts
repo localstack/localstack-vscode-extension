@@ -33,11 +33,18 @@ export const LICENSE_FILENAME = join(
 
 const LICENSE_VALIDITY_MARKER = "license validity: valid";
 
-export async function checkIsLicenseValid(outputChannel: LogOutputChannel) {
+export async function checkIsLicenseValid(
+	cliPath: string,
+	outputChannel: LogOutputChannel,
+) {
 	try {
-		const licenseInfoResponse = await execLocalStack(["license", "info"], {
-			outputChannel,
-		});
+		const licenseInfoResponse = await execLocalStack(
+			cliPath,
+			["license", "info"],
+			{
+				outputChannel,
+			},
+		);
 		return licenseInfoResponse.stdout.includes(LICENSE_VALIDITY_MARKER);
 	} catch (error) {
 		outputChannel.error(error instanceof Error ? error : String(error));
@@ -46,9 +53,12 @@ export async function checkIsLicenseValid(outputChannel: LogOutputChannel) {
 	}
 }
 
-export async function activateLicense(outputChannel: LogOutputChannel) {
+export async function activateLicense(
+	cliPath: string,
+	outputChannel: LogOutputChannel,
+) {
 	try {
-		await execLocalStack(["license", "activate"], {
+		await execLocalStack(cliPath, ["license", "activate"], {
 			outputChannel,
 		});
 	} catch (error) {
@@ -57,6 +67,7 @@ export async function activateLicense(outputChannel: LogOutputChannel) {
 }
 
 export async function activateLicenseUntilValid(
+	cliPath: string,
 	outputChannel: LogOutputChannel,
 	cancellationToken: CancellationToken,
 ): Promise<void> {
@@ -64,11 +75,11 @@ export async function activateLicenseUntilValid(
 		if (cancellationToken.isCancellationRequested) {
 			break;
 		}
-		const licenseIsValid = await checkIsLicenseValid(outputChannel);
+		const licenseIsValid = await checkIsLicenseValid(cliPath, outputChannel);
 		if (licenseIsValid) {
 			break;
 		}
-		await activateLicense(outputChannel);
+		await activateLicense(cliPath, outputChannel);
 		// Wait before trying again
 		await new Promise((resolve) => setTimeout(resolve, 1000));
 	}

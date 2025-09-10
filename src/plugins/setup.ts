@@ -25,6 +25,7 @@ export default createPlugin(
 		outputChannel,
 		setupStatusTracker,
 		localStackStatusTracker,
+		cliStatusTracker,
 		telemetry,
 	}) => {
 		context.subscriptions.push(
@@ -43,7 +44,15 @@ export default createPlugin(
 						},
 					});
 
-					window.withProgress(
+					const cliPath = cliStatusTracker.cliPath();
+					if (!cliPath) {
+						void window.showErrorMessage(
+							"LocalStack CLI is not configured. Please set it up before running the setup wizard.",
+						);
+						return;
+					}
+
+					void window.withProgress(
 						{
 							location: ProgressLocation.Notification,
 							title: "Setup LocalStack",
@@ -55,13 +64,14 @@ export default createPlugin(
 							let authenticationStatus: "COMPLETED" | "SKIPPED" = "COMPLETED";
 							{
 								const installationStartedAt = new Date().toISOString();
-								const { cancelled, skipped } = await runInstallProcess(
+								const { cancelled, skipped } = await runInstallProcess({
+									cliPath,
 									progress,
 									cancellationToken,
 									outputChannel,
 									telemetry,
-									origin_trigger,
-								);
+									origin: origin_trigger,
+								});
 								cliStatus = skipped === true ? "SKIPPED" : "COMPLETED";
 								if (cancelled || cancellationToken.isCancellationRequested) {
 									telemetry.track({
@@ -227,8 +237,8 @@ export default createPlugin(
 							// Activating the license pre-emptively to know its state during the setup process.
 							const licenseCheckStartedAt = new Date().toISOString();
 							const licenseIsValid = await minDelay(
-								activateLicense(outputChannel).then(() =>
-									checkIsLicenseValid(outputChannel),
+								activateLicense(cliPath, outputChannel).then(() =>
+									checkIsLicenseValid(cliPath, outputChannel),
 								),
 							);
 							if (!licenseIsValid) {
@@ -240,6 +250,7 @@ export default createPlugin(
 								await commands.executeCommand("localstack.openLicensePage");
 
 								await activateLicenseUntilValid(
+									cliPath,
 									outputChannel,
 									cancellationToken,
 								);
