@@ -4,6 +4,7 @@
 
 - fix: Add proactive DNS resolution check in AWS config check to timely detect configuration drift
 - fix: Add a missing telemetry field in `setup_ended` event
+- chore: Substitute periodic checks with file watchers for LocalStack setup status.
 
 
 ## 1.2.0 (2025-09-09)
