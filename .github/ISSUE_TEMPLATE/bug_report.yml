@@ -1,0 +1,97 @@
+name: Bug Report
+description: Report a problem with the LocalStack Toolkit for VS Code
+title: "bug: <title>"
+labels: ["type: bug", "status: triage needed"]
+body:
+- type: markdown
+  attributes:
+    value: |
+      ## Thank you for reporting a bug!
+      Please fill out the form below to help us resolve your issue with the LocalStack Toolkit.
+- type: input
+  id: os
+  attributes:
+    label: Operating System
+    description: What operating system are you using?
+    placeholder: e.g. macOS 14, Windows 11, Ubuntu 22.04
+  validations:
+    required: true
+- type: input
+  id: vscode-version
+  attributes:
+    label: VS Code Version
+    description: What version of VS Code are you using?
+    placeholder: e.g. 1.103.2
+  validations:
+    required: true
+- type: input
+  id: extension-version
+  attributes:
+    label: Extension Version
+    description: What version of the LocalStack Toolkit are you using?
+    placeholder: e.g. 1.2.0
+  validations:
+    required: true
+- type: input
+  id: localstack-version
+  attributes:
+    label: LocalStack Version
+    description: |
+      What version of LocalStack are you using?
+
+      You can find the version in the LocalStack startup logs or by running:
+      curl http://localhost:4566/_localstack/info | jq '.version'
+
+      This helps us reproduce and diagnose your issue more effectively.
+    placeholder: e.g. 4.8.0
+  validations:
+    required: true
+- type: input
+  id: localstack-cli-version
+  attributes:
+    label: LocalStack CLI Version
+    description: |
+      What version of the LocalStack CLI are you using?
+
+      You can find the version by running:
+      localstack --version
+
+      This helps us ensure compatibility and troubleshoot CLI-specific issues.
+    placeholder: e.g. 4.8.0
+  validations:
+    required: true
+- type: textarea
+  id: steps-to-reproduce
+  attributes:
+    label: Steps to Reproduce
+    description: Please list the steps needed to reproduce the issue.
+    placeholder: |
+      1. Go to '...'
+      2. Click on '...'
+      3. See error
+  validations:
+    required: true
+- type: textarea
+  id: expected-behavior
+  attributes:
+    label: Expected Behavior
+    description: What did you expect to happen?
+    placeholder: The expected outcome
+  validations:
+    required: true
+- type: textarea
+  id: actual-behavior
+  attributes:
+    label: Actual Behavior
+    description: What actually happened?
+    placeholder: The actual outcome
+  validations:
+    required: true
+- type: textarea
+  id: additional-context
+  attributes:
+    label: Additional Context
+    description: Add any other context, logs, or screenshots about the problem here.
+    placeholder: Any other details
+  validations:
+    required: false
