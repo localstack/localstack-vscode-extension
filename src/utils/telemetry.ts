@@ -75,6 +75,7 @@ type Events =
 			name: "setup_ended";
 			payload: {
 				namespace: "onboarding";
+				origin: "manual_trigger" | "extension_startup";
 				steps: [
 					{
 						name: "emulator_installed";
@@ -220,12 +221,14 @@ export function get_setup_ended(
 	license_setup_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
 	aws_profile_status: "COMPLETED" | "SKIPPED" | "CANCELLED",
 	overall_status: "CANCELLED" | "COMPLETED",
+	origin: "manual_trigger" | "extension_startup",
 	auth_token: string = "",
 ): Events {
 	return {
 		name: "setup_ended",
 		payload: {
 			namespace: "onboarding",
+			origin,
 			steps: [
 				{
 					name: "emulator_installed",

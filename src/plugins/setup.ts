@@ -82,6 +82,7 @@ export default createPlugin(
 											"SKIPPED",
 											"SKIPPED",
 											"CANCELLED",
+											origin_trigger,
 										),
 									);
 									return;
@@ -121,6 +122,7 @@ export default createPlugin(
 										"SKIPPED",
 										"SKIPPED",
 										"CANCELLED",
+										origin_trigger,
 										await readAuthToken(),
 									),
 								);
@@ -176,6 +178,7 @@ export default createPlugin(
 											"SKIPPED",
 											"SKIPPED",
 											"CANCELLED",
+											origin_trigger,
 											await readAuthToken(),
 										),
 									);
@@ -207,6 +210,7 @@ export default createPlugin(
 											"SKIPPED",
 											"SKIPPED",
 											"CANCELLED",
+											origin_trigger,
 											authToken,
 										),
 									);
@@ -261,6 +265,7 @@ export default createPlugin(
 										"CANCELLED",
 										"SKIPPED",
 										"CANCELLED",
+										origin_trigger,
 										await readAuthToken(),
 									),
 								);
@@ -314,6 +319,7 @@ export default createPlugin(
 										"COMPLETED",
 										"COMPLETED",
 										"CANCELLED",
+										origin_trigger,
 										await readAuthToken(),
 									),
 								);
@@ -352,6 +358,7 @@ export default createPlugin(
 									"COMPLETED",
 									"COMPLETED",
 									"COMPLETED",
+									origin_trigger,
 									await readAuthToken(),
 								),
 							);
