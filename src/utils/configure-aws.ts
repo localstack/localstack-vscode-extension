@@ -68,9 +68,21 @@ function isValidEndpointUrl(url: string | undefined): boolean {
 	}
 }
 
-function checkIfConfigNeedsOverride(section: IniSection | undefined): boolean {
+async function checkIfConfigNeedsOverride(
+	section: IniSection | undefined,
+): Promise<boolean> {
 	if (!section) {
 		return true; // profile doesn't exist
+	}
+
+	if (
+		section.properties.endpoint_url === "http://localhost.localstack.cloud:4566"
+	) {
+		const isDnsResolved = await dnsResolveCheck(undefined);
+		if (!isDnsResolved) {
+			// if DNS is not resolved, we need to override the endpoint_url
+			return true;
+		}
 	}
 
 	return !(
@@ -317,7 +329,7 @@ export async function configureAwsProfiles(options: {
 	let configModified: boolean | undefined;
 	let credentialsModified: boolean | undefined;
 
-	const configNeedsOverride = checkIfConfigNeedsOverride(configSection);
+	const configNeedsOverride = await checkIfConfigNeedsOverride(configSection);
 	const credentialsNeedsOverride =
 		checkIfCredentialsNeedsOverride(credentialsSection);
 
