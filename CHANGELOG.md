@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 (2025-09-10)
+
+- fix: Add proactive DNS resolution check in AWS config check to timely detect configuration drift
+- fix: Add a missing telemetry field in `setup_ended` event
+
+
 ## 1.2.0 (2025-09-09)
 
 - feat: Always show `Start` and `Stop` commands if LocalStack CLI is available
