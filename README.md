@@ -4,13 +4,13 @@ The LocalStack Toolkit for VS Code enables you to install, configure, and run Lo
 
 ## Install and configure LocalStack
 
-The setup wizard ensures LocalStack is installed and configured for a seamless integration with AWS tools, like AWS CLI, SDKs, CDK.
+The setup wizard ensures LocalStack is installed and configured for a seamless integration with AWS tools, like the AWS Toolkit VS Code extension, AWS CLI, SDKs, and CDK.
 
 LocalStack can be installed either locally for the current user or globally for all users.
 
 You can start using LocalStack for free by signing up for a free account or signing into an existing one. The setup wizard facilitates this process and configures your authentication token required to start LocalStack.
 
-The LocalStack Toolkit integrates seamlessly with AWS tools like the AWS CLI. It automatically configures a dedicated `localstack` AWS profile in your `.aws/config` and `.aws/credentials` files, if one is not already present.
+The LocalStack Toolkit integrates seamlessly with AWS tools like the AWS Toolkit VS Code extension, AWS CLI, SDKs, and CDK. It automatically configures a dedicated `localstack` AWS profile in your `.aws/config` and `.aws/credentials` files, if one is not already present.
 
 ![Run the LocalStack Setup Wizard](docs/images/localstack-toolkit-setup-wizard.gif)
 
@@ -26,7 +26,8 @@ You can see LocalStack logs in the VS Code Output panel. Simply select LocalStac
 
 ## `localstack` AWS profile
 
-Once the profile is configured you can use it from your favorite AWS tools like AWS CLI, SDKs, CDK to deploy to and interact with LocalStack.
+Once the profile is configured you can use it from your favorite AWS tools like the AWS Toolkit VS Code extension, AWS CLI, SDKs, and CDK to deploy to and interact with LocalStack.
+For example, the AWS Toolkit for VS Code includes compatibility with your `localstack` AWS profile and the integration enables Lambda Remote Debugging on LocalStack. Check [AWS Lambda with LocalStack support](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/lambda-localstack.html) and [LocalStack Lambda Remote Debugging](https://docs.localstack.cloud/aws/tooling/lambda-tools/remote-debugging/) for detailed information.
 
 ## Changelog
 
@@ -40,7 +41,7 @@ Once the profile is configured you can use it from your favorite AWS tools like 
 
 ### LocalStack Toolkit for VS Code extension support
 
-Please provide feedback or report an issue on the LocalStack Toolkit for VS Code by using our [GitHub Issues](https://github.com/localstack/localstack-vscode-extension/issues) page.
+Please provide feedback or report an issue on the LocalStack Toolkit for VS Code by using our [GitHub Issues](https://github.com/localstack/localstack-toolkit-vscode/issues) page.
 
 ### LocalStack general support
 
