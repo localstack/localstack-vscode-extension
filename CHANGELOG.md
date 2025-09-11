@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2 (2025-09-11)
+
+- chore: Update repository URL
+- chore: Add AWS Toolkit integration information
+
 ## 1.2.1 (2025-09-10)
 
 - fix: Add proactive DNS resolution check in AWS config check to timely detect configuration drift
