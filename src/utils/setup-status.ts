@@ -275,7 +275,7 @@ function createLicenseStatusTracker(
 	return createFileStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
-		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTrackerl
+		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTracker
 		async () =>
 			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
 	);
