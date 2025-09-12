@@ -255,7 +255,7 @@ function createLicenseStatusTracker(
 	return createFileStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
-		[LICENSE_FILENAME],
+		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME],
 		async () =>
 			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
 	);
