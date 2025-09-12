@@ -9,16 +9,30 @@ import {
 
 export default createPlugin(
 	"manage",
-	({ context, outputChannel, telemetry, localStackStatusTracker }) => {
+	({
+		context,
+		outputChannel,
+		telemetry,
+		localStackStatusTracker,
+		cliStatusTracker,
+	}) => {
 		context.subscriptions.push(
 			commands.registerCommand("localstack.start", async () => {
+				const cliPath = cliStatusTracker.cliPath();
+				if (!cliPath) {
+					void window.showInformationMessage(
+						"LocalStack CLI could not be found. Please, run the setup wizard.",
+					);
+					return;
+				}
+
 				if (localStackStatusTracker.status() !== "stopped") {
 					window.showInformationMessage("LocalStack is already running.");
 					return;
 				}
 				localStackStatusTracker.forceContainerStatus("running");
 				try {
-					await startLocalStack(outputChannel, telemetry);
+					await startLocalStack(cliPath, outputChannel, telemetry);
 				} catch {
 					localStackStatusTracker.forceContainerStatus("stopped");
 				}
@@ -27,12 +41,20 @@ export default createPlugin(
 
 		context.subscriptions.push(
 			commands.registerCommand("localstack.stop", () => {
+				const cliPath = cliStatusTracker.cliPath();
+				if (!cliPath) {
+					void window.showInformationMessage(
+						"LocalStack CLI could not be found. Please, run the setup wizard.",
+					);
+					return;
+				}
+
 				if (localStackStatusTracker.status() !== "running") {
 					window.showInformationMessage("LocalStack is not running.");
 					return;
 				}
 				localStackStatusTracker.forceContainerStatus("stopping");
-				void stopLocalStack(outputChannel, telemetry);
+				void stopLocalStack(cliPath, outputChannel, telemetry);
 			}),
 		);
 

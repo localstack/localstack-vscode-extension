@@ -8,6 +8,7 @@ import manage from "./plugins/manage.ts";
 import setup from "./plugins/setup.ts";
 import statusBar from "./plugins/status-bar.ts";
 import { PluginManager } from "./plugins.ts";
+import { createCliStatusTracker } from "./utils/cli.ts";
 import { createContainerStatusTracker } from "./utils/container-status.ts";
 import { createLocalStackStatusTracker } from "./utils/localstack-status.ts";
 import { getOrCreateExtensionSessionId } from "./utils/manage.ts";
@@ -29,6 +30,9 @@ export async function activate(context: ExtensionContext) {
 	});
 	context.subscriptions.push(outputChannel);
 
+	const cliStatusTracker = createCliStatusTracker(outputChannel);
+	context.subscriptions.push(cliStatusTracker);
+
 	const timeTracker = createTimeTracker({ outputChannel });
 
 	const {
@@ -46,7 +50,7 @@ export async function activate(context: ExtensionContext) {
 		statusBarItem.text = "$(loading~spin) LocalStack";
 		statusBarItem.show();
 
-		const containerStatusTracker = await createContainerStatusTracker(
+		const containerStatusTracker = createContainerStatusTracker(
 			"localstack-main",
 			outputChannel,
 			timeTracker,
@@ -65,6 +69,7 @@ export async function activate(context: ExtensionContext) {
 		const setupStatusTracker = await createSetupStatusTracker(
 			outputChannel,
 			timeTracker,
+			cliStatusTracker,
 		);
 		context.subscriptions.push(setupStatusTracker);
 		const endStatusTracker = Date.now();
@@ -100,6 +105,7 @@ export async function activate(context: ExtensionContext) {
 			context,
 			outputChannel,
 			statusBarItem,
+			cliStatusTracker,
 			containerStatusTracker,
 			localStackStatusTracker,
 			setupStatusTracker,

@@ -12,7 +12,6 @@ import {
 	LOCAL_CLI_INSTALLATION_DIRNAME,
 } from "../constants.ts";
 
-import { execLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
 import { minDelay } from "./promises.ts";
 import {
@@ -23,33 +22,33 @@ import {
 import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
 
-export async function checkLocalstackInstalled(
-	outputChannel: LogOutputChannel,
-): Promise<boolean> {
-	try {
-		await execLocalStack(["--version"], { outputChannel });
-		return true;
-	} catch (error) {
-		return false;
-	}
+export interface RunInstallProcessOptions {
+	progress: Progress<{ message: string }>;
+	cancellationToken: CancellationToken;
+	outputChannel: LogOutputChannel;
+	telemetry: Telemetry;
+	origin?: "extension_startup" | "manual_trigger";
+	cliPath: string | undefined;
 }
 
 export async function runInstallProcess(
-	progress: Progress<{ message: string }>,
-	cancellationToken: CancellationToken,
-	outputChannel: LogOutputChannel,
-	telemetry: Telemetry,
-	origin?: "extension_startup" | "manual_trigger",
+	options: RunInstallProcessOptions,
 ): Promise<{ cancelled: boolean; skipped?: boolean }> {
+	const {
+		progress,
+		cancellationToken,
+		outputChannel,
+		telemetry,
+		origin,
+		cliPath,
+	} = options;
 	/////////////////////////////////////////////////////////////////////
 	const origin_trigger = origin ? origin : "manual_trigger";
 	progress.report({
 		message: "Verifying CLI installation...",
 	});
 	const startedAt = new Date().toISOString();
-	const isLocalStackInstalled = await minDelay(
-		checkLocalstackInstalled(outputChannel),
-	);
+	const isLocalStackInstalled = cliPath !== undefined;
 	if (cancellationToken.isCancellationRequested) {
 		return { cancelled: true };
 	}

@@ -32,8 +32,3 @@ export function minDelay<T>(
 		MIN_TIME_BETWEEN_STEPS_MS,
 	);
 }
-
-/**
- * Extracts the resolved type from a Promise.
- */
-export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;

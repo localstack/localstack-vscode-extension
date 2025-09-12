@@ -4,16 +4,16 @@ import type {
 	ContainerStatus,
 	ContainerStatusTracker,
 } from "./container-status.ts";
-import { createEmitter } from "./emitter.ts";
+import { createValueEmitter } from "./emitter.ts";
 import { fetchHealth } from "./manage.ts";
 import type { TimeTracker } from "./time-tracker.ts";
 
 export type LocalStackStatus = "starting" | "running" | "stopping" | "stopped";
 
 export interface LocalStackStatusTracker extends Disposable {
-	status(): LocalStackStatus;
+	status(): LocalStackStatus | undefined;
 	forceContainerStatus(status: ContainerStatus): void;
-	onChange(callback: (status: LocalStackStatus) => void): void;
+	onChange(callback: (status: LocalStackStatus | undefined) => void): void;
 }
 
 /**
@@ -25,26 +25,19 @@ export function createLocalStackStatusTracker(
 	timeTracker: TimeTracker,
 ): LocalStackStatusTracker {
 	let containerStatus: ContainerStatus | undefined;
-	let status: LocalStackStatus | undefined;
-	const emitter = createEmitter<LocalStackStatus>(outputChannel);
+	const status = createValueEmitter<LocalStackStatus>();
 
-	const healthCheckStatusTracker = createHealthStatusTracker(
-		outputChannel,
-		timeTracker,
-	);
+	const healthCheckStatusTracker = createHealthStatusTracker(timeTracker);
 
 	const setStatus = (newStatus: LocalStackStatus) => {
-		if (status !== newStatus) {
-			status = newStatus;
-			void emitter.emit(status);
-		}
+		status.setValue(newStatus);
 	};
 
 	const deriveStatus = () => {
 		const newStatus = getLocalStackStatus(
 			containerStatus,
 			healthCheckStatusTracker.status(),
-			status,
+			status.value(),
 		);
 		setStatus(newStatus);
 	};
@@ -56,7 +49,7 @@ export function createLocalStackStatusTracker(
 		}
 	});
 
-	emitter.on((newStatus) => {
+	status.onChange((newStatus) => {
 		outputChannel.trace(`[localstack-status] localstack=${newStatus}`);
 
 		if (newStatus === "running") {
@@ -66,10 +59,10 @@ export function createLocalStackStatusTracker(
 
 	containerStatusTracker.onChange((newContainerStatus) => {
 		outputChannel.trace(
-			`[localstack-status] container=${newContainerStatus} (localstack=${status})`,
+			`[localstack-status] container=${newContainerStatus} (localstack=${status.value()})`,
 		);
 
-		if (newContainerStatus === "running" && status !== "running") {
+		if (newContainerStatus === "running" && status.value() !== "running") {
 			healthCheckStatusTracker.start();
 		}
 	});
@@ -78,10 +71,11 @@ export function createLocalStackStatusTracker(
 		deriveStatus();
 	});
 
+	deriveStatus();
+
 	return {
 		status() {
-			// biome-ignore lint/style/noNonNullAssertion: false positive
-			return status!;
+			return status.value();
 		},
 		forceContainerStatus(newContainerStatus) {
 			if (containerStatus !== newContainerStatus) {
@@ -90,10 +84,7 @@ export function createLocalStackStatusTracker(
 			}
 		},
 		onChange(callback) {
-			emitter.on(callback);
-			if (status) {
-				callback(status);
-			}
+			status.onChange(callback);
 		},
 		dispose() {
 			healthCheckStatusTracker.dispose();
@@ -135,19 +126,14 @@ interface HealthStatusTracker extends Disposable {
 }
 
 function createHealthStatusTracker(
-	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
 ): HealthStatusTracker {
-	let status: HealthStatus | undefined;
-	const emitter = createEmitter<HealthStatus | undefined>(outputChannel);
+	const status = createValueEmitter<HealthStatus | undefined>();
 
 	let healthCheckTimeout: NodeJS.Timeout | undefined;
 
 	const updateStatus = (newStatus: HealthStatus | undefined) => {
-		if (status !== newStatus) {
-			status = newStatus;
-			void emitter.emit(status);
-		}
+		status.setValue(newStatus);
 	};
 
 	const fetchAndUpdateStatus = async () => {
@@ -178,23 +164,20 @@ function createHealthStatusTracker(
 
 	return {
 		status() {
-			return status;
+			return status.value();
 		},
 		start() {
 			enqueueAgain = true;
 			enqueueUpdateStatus();
 		},
 		stop() {
-			status = undefined;
+			status.setValue(undefined);
 			enqueueAgain = false;
 			clearTimeout(healthCheckTimeout);
 			healthCheckTimeout = undefined;
 		},
 		onChange(callback) {
-			emitter.on(callback);
-			if (status) {
-				callback(status);
-			}
+			status.onChange(callback);
 		},
 		dispose() {
 			clearTimeout(healthCheckTimeout);

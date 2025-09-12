@@ -15,20 +15,26 @@ export const GLOBAL_CLI_INSTALLATION_DIRNAME = join(
 );
 
 const CLI_UNIX_PATHS = [
+	// The local installation path takes precedence.
+	join(LOCAL_CLI_INSTALLATION_DIRNAME, "localstack"),
+	// Check if it's in the PATH.
 	"localstack",
+	// Common installation paths.
 	join("/", "usr", "bin", "localstack"),
 	join("/", "usr", "local", "bin", "localstack"),
 	join("/", "opt", "homebrew", "bin", "localstack"),
 	join("/", "home", "linuxbrew", ".linuxbrew", "bin", "localstack"),
 	join(homedir(), ".linuxbrew", "bin", "localstack"),
 	join(homedir(), ".local", "bin", "localstack"),
-	join(LOCAL_CLI_INSTALLATION_DIRNAME, "localstack"),
 ];
 
 const CLI_WINDOWS_PATHS = [
-	"localstack.exe",
-	join(GLOBAL_CLI_INSTALLATION_DIRNAME, "localstack", "localstack.exe"),
+	// The local installation path takes precedence.
 	join(LOCAL_CLI_INSTALLATION_DIRNAME, "localstack.exe"),
+	// Check if it's in the PATH.
+	"localstack.exe",
+	// Common installation paths.
+	join(GLOBAL_CLI_INSTALLATION_DIRNAME, "localstack", "localstack.exe"),
 ];
 
 export const CLI_PATHS =

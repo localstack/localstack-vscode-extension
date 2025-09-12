@@ -3,56 +3,49 @@ import { exec, spawn } from "node:child_process";
 import type { Disposable, LogOutputChannel } from "vscode";
 import * as z from "zod/v4-mini";
 
-import { createEmitter } from "./emitter.ts";
+import { createValueEmitter } from "./emitter.ts";
 import { JsonLinesStream } from "./json-lines-stream.ts";
 import type { TimeTracker } from "./time-tracker.ts";
 
 export type ContainerStatus = "running" | "stopping" | "stopped";
 
 export interface ContainerStatusTracker extends Disposable {
-	status(): ContainerStatus;
-	onChange(callback: (status: ContainerStatus) => void): void;
+	status(): ContainerStatus | undefined;
+	onChange(callback: (status: ContainerStatus | undefined) => void): void;
 }
 
 /**
  * Checks the status of a docker container in realtime.
  */
-export async function createContainerStatusTracker(
+export function createContainerStatusTracker(
 	containerName: string,
 	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
-): Promise<ContainerStatusTracker> {
-	let status: ContainerStatus | undefined;
-	const emitter = createEmitter<ContainerStatus>(outputChannel);
+): ContainerStatusTracker {
+	const status = createValueEmitter<ContainerStatus>();
 
 	const disposable = listenToContainerStatus(
 		containerName,
 		outputChannel,
 		(newStatus) => {
-			if (status !== newStatus) {
-				status = newStatus;
-				void emitter.emit(status);
-			}
+			status.setValue(newStatus);
 		},
 	);
 
-	await timeTracker.run("container-status.getContainerStatus", async () => {
+	void timeTracker.run("container-status.getContainerStatus", async () => {
 		await getContainerStatus(containerName).then((newStatus) => {
-			status ??= newStatus;
-			void emitter.emit(status);
+			if (status.value() !== undefined) {
+				status.setValue(newStatus);
+			}
 		});
 	});
 
 	return {
 		status() {
-			// biome-ignore lint/style/noNonNullAssertion: false positive
-			return status!;
+			return status.value();
 		},
 		onChange(callback) {
-			emitter.on(callback);
-			if (status) {
-				callback(status);
-			}
+			status.onChange(callback);
 		},
 		dispose() {
 			disposable.dispose();
