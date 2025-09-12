@@ -6,7 +6,7 @@ import {
 	checkIsAuthenticated,
 	LOCALSTACK_AUTH_FILENAME,
 } from "./authenticate.ts";
-import type { LocalStackCliTracker } from "./cli.ts";
+import type { CliStatusTracker } from "./cli.ts";
 import {
 	AWS_CONFIG_FILENAME,
 	AWS_CREDENTIALS_FILENAME,
@@ -30,7 +30,7 @@ export interface SetupStatusTracker extends Disposable {
 export async function createSetupStatusTracker(
 	outputChannel: LogOutputChannel,
 	timeTracker: TimeTracker,
-	cliTracker: LocalStackCliTracker,
+	cliTracker: CliStatusTracker,
 ): Promise<SetupStatusTracker> {
 	const start = Date.now();
 	const status = createValueEmitter<SetupStatus>();
@@ -269,7 +269,7 @@ function createLocalStackAuthenticationStatusTracker(
  * @returns A {@link StatusTracker} instance for querying status, subscribing to changes, and disposing resources.
  */
 function createLicenseStatusTracker(
-	cliTracker: LocalStackCliTracker,
+	cliTracker: CliStatusTracker,
 	authTracker: StatusTracker,
 	outputChannel: LogOutputChannel,
 ): StatusTracker {

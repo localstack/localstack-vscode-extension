@@ -161,7 +161,7 @@ export const spawnLocalStack = async (
 
 export type LocalStackCliStatus = "not_found" | "outdated" | "ok";
 
-export interface LocalStackCliTracker extends Disposable {
+export interface CliStatusTracker extends Disposable {
 	status(): SetupStatus | undefined;
 	onStatusChange(callback: (status: SetupStatus | undefined) => void): void;
 	cliPath(): string | undefined;
@@ -170,7 +170,7 @@ export interface LocalStackCliTracker extends Disposable {
 
 export function createCliStatusTracker(
 	outputChannel: LogOutputChannel,
-): LocalStackCliTracker {
+): CliStatusTracker {
 	const status = createValueEmitter<SetupStatus>();
 	const cliPath = createValueEmitter<string | undefined>();
 
