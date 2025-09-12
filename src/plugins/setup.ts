@@ -296,8 +296,6 @@ export default createPlugin(
 								}),
 							);
 
-							void commands.executeCommand("localstack.refreshStatusBar");
-
 							progress.report({
 								message:
 									'Finished configuring the AWS profile named "localstack".',
@@ -325,6 +323,8 @@ export default createPlugin(
 								);
 								return;
 							}
+
+							void commands.executeCommand("localstack.refreshStatusBar");
 
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
