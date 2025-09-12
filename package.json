@@ -3,7 +3,7 @@
 	"publisher": "LocalStack",
 	"displayName": "LocalStack Toolkit",
 	"description": "LocalStack - Run locally, deploy globally!",
-	"version": "1.2.2",
+	"version": "1.2.3",
 	"engines": {
 		"node": ">=20",
 		"vscode": "^1.83.0"

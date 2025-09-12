@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3 (2025-09-12)
+
+- fix: Show LocalStack Setup Wizard pop-up only when setup is required
+
 ## 1.2.2 (2025-09-11)
 
 - chore: Update repository URL
