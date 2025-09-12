@@ -50,7 +50,7 @@ export async function activate(context: ExtensionContext) {
 		statusBarItem.text = "$(loading~spin) LocalStack";
 		statusBarItem.show();
 
-		const containerStatusTracker = await createContainerStatusTracker(
+		const containerStatusTracker = createContainerStatusTracker(
 			"localstack-main",
 			outputChannel,
 			timeTracker,
