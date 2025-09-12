@@ -12,7 +12,6 @@ import {
 	LOCAL_CLI_INSTALLATION_DIRNAME,
 } from "../constants.ts";
 
-import { execLocalStack } from "./cli.ts";
 import { exec } from "./exec.ts";
 import { minDelay } from "./promises.ts";
 import {
@@ -22,18 +21,6 @@ import {
 } from "./prompts.ts";
 import { spawn } from "./spawn.ts";
 import type { Telemetry } from "./telemetry.ts";
-
-// export async function checkLocalstackInstalled(
-// 	cliPath: string|undefined,
-// 	outputChannel: LogOutputChannel,
-// ): Promise<boolean> {
-// 	try {
-// 		await execLocalStack(cliPath, ["--version"], { outputChannel });
-// 		return true;
-// 	} catch (error) {
-// 		return false;
-// 	}
-// }
 
 export interface RunInstallProcessOptions {
 	progress: Progress<{ message: string }>;
