@@ -296,8 +296,6 @@ export default createPlugin(
 								}),
 							);
 
-							void commands.executeCommand("localstack.refreshStatusBar");
-
 							progress.report({
 								message:
 									'Finished configuring the AWS profile named "localstack".',
@@ -325,6 +323,8 @@ export default createPlugin(
 								);
 								return;
 							}
+
+							void commands.executeCommand("localstack.refreshStatusBar");
 
 							/////////////////////////////////////////////////////////////////////
 							if (localStackStatusTracker.status() === "running") {
@@ -368,17 +368,22 @@ export default createPlugin(
 			),
 		);
 
-		if (setupStatusTracker.status() === "setup_required") {
-			window
-				.showInformationMessage("Setup LocalStack to get started.", {
-					title: "Setup",
-					command: "localstack.setup",
-				})
-				.then((selected) => {
-					if (selected) {
-						commands.executeCommand(selected.command, "extension_startup");
-					}
-				});
-		}
+		setupStatusTracker.onChange((status) => {
+			if (status === "setup_required") {
+				void window
+					.showInformationMessage("Setup LocalStack to get started.", {
+						title: "Setup",
+						command: "localstack.setup",
+					})
+					.then((selected) => {
+						if (selected) {
+							void commands.executeCommand(
+								selected.command,
+								"extension_startup",
+							);
+						}
+					});
+			}
+		});
 	},
 );

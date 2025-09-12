@@ -47,10 +47,30 @@ export async function createSetupStatusTracker(
 	);
 
 	const checkStatusNow = async () => {
+		const allStatusesInitialized = Object.values({
+			awsProfileTracker: awsProfileTracker.status(),
+			authTracker: localStackAuthenticationTracker.status(),
+			licenseTracker: licenseTracker.status(),
+		}).every((check) => check !== undefined);
+
+		if (!allStatusesInitialized) {
+			outputChannel.trace(
+				`[setup-status] File watchers not initialized yet, skipping status check : ${JSON.stringify(
+					{
+						awsProfileTracker: awsProfileTracker.status() ?? "undefined",
+						authTracker:
+							localStackAuthenticationTracker.status() ?? "undefined",
+						licenseTracker: licenseTracker.status() ?? "undefined",
+					},
+				)}`,
+			);
+			return;
+		}
+
 		statuses = await checkSetupStatus(outputChannel);
 
 		const setupRequired = [
-			Object.values(statuses),
+			...Object.values(statuses),
 			awsProfileTracker.status() === "ok",
 			localStackAuthenticationTracker.status() === "ok",
 			licenseTracker.status() === "ok",
@@ -60,7 +80,12 @@ export async function createSetupStatusTracker(
 		if (status !== newStatus) {
 			status = newStatus;
 			outputChannel.trace(
-				`[setup-status] Status changed to ${JSON.stringify(statuses)}`,
+				`[setup-status] Status changed to ${JSON.stringify({
+					...statuses,
+					awsProfileTracker: awsProfileTracker.status() ?? "undefined",
+					authTracker: localStackAuthenticationTracker.status() ?? "undefined",
+					licenseTracker: licenseTracker.status() ?? "undefined",
+				})}`,
 			);
 			await emitter.emit(status);
 		}
@@ -178,6 +203,9 @@ function createFileStatusTracker(
 			outputChannel.error(error instanceof Error ? error : String(error));
 		});
 
+	// Update the status immediately on file tracker initialization
+	void updateStatus();
+
 	return {
 		status() {
 			return status;
@@ -247,7 +275,7 @@ function createLicenseStatusTracker(
 	return createFileStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
-		[LICENSE_FILENAME],
+		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTracker
 		async () =>
 			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
 	);
