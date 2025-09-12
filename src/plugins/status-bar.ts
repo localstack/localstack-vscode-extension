@@ -88,7 +88,11 @@ export default createPlugin(
 			);
 
 			// Skip rendering the status bar if any of the status checks is not ready.
-			if (setupStatus === undefined || cliStatus === undefined) {
+			if (
+				setupStatus === undefined ||
+				localStackStatus === undefined ||
+				cliStatus === undefined
+			) {
 				return;
 			}
 
