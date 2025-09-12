@@ -12,10 +12,9 @@ import {
 	AWS_CREDENTIALS_FILENAME,
 	checkIsProfileConfigured,
 } from "./configure-aws.ts";
-import { createEmitter } from "./emitter.ts";
+import { createValueEmitter } from "./emitter.ts";
 import { immediateOnce } from "./immediate-once.ts";
 import { checkIsLicenseValid, LICENSE_FILENAME } from "./license.ts";
-import type { UnwrapPromise } from "./promises.ts";
 import type { TimeTracker } from "./time-tracker.ts";
 
 export type SetupStatus = "ok" | "setup_required";
@@ -34,8 +33,7 @@ export async function createSetupStatusTracker(
 	cliTracker: LocalStackCliTracker,
 ): Promise<SetupStatusTracker> {
 	const start = Date.now();
-	let status: SetupStatus | undefined;
-	const emitter = createEmitter<SetupStatus>(outputChannel);
+	const status = createValueEmitter<SetupStatus>();
 	const awsProfileTracker = createAwsProfileStatusTracker(outputChannel);
 	const localStackAuthenticationTracker =
 		createLocalStackAuthenticationStatusTracker(outputChannel);
@@ -79,8 +77,7 @@ export async function createSetupStatusTracker(
 			(status) => status === "setup_required",
 		);
 		const newStatus = setupRequired ? "setup_required" : "ok";
-		if (status !== newStatus) {
-			status = newStatus;
+		if (status.value() !== newStatus) {
 			outputChannel.trace(
 				`[setup-status] Status changed to ${JSON.stringify({
 					cliTracker: cliTracker.status() ?? "undefined",
@@ -89,8 +86,8 @@ export async function createSetupStatusTracker(
 					licenseTracker: licenseTracker.status() ?? "undefined",
 				})}`,
 			);
-			await emitter.emit(status);
 		}
+		status.setValue(newStatus);
 	};
 
 	const checkStatus = immediateOnce(async () => {
@@ -126,14 +123,10 @@ export async function createSetupStatusTracker(
 
 	return {
 		status() {
-			// biome-ignore lint/style/noNonNullAssertion: false positive
-			return status!;
+			return status.value();
 		},
 		onChange(callback) {
-			emitter.on(callback);
-			if (status) {
-				callback(status);
-			}
+			status.onChange(callback);
 		},
 		async dispose() {
 			clearTimeout(timeout);
@@ -169,19 +162,22 @@ function createFileStatusTracker(
 	files: string[],
 	check: () => Promise<SetupStatus | undefined> | SetupStatus | undefined,
 ): StatusTracker {
-	let status: SetupStatus | undefined;
+	// let status: SetupStatus | undefined;
 
-	const emitter = createEmitter<SetupStatus | undefined>(outputChannel);
+	// const emitter = createEmitter<SetupStatus | undefined>(outputChannel);
+
+	const status = createValueEmitter<SetupStatus | undefined>();
 
 	const updateStatus = immediateOnce(async () => {
 		const newStatus = await Promise.resolve(check());
-		if (status !== newStatus) {
-			status = newStatus;
-			outputChannel.trace(
-				`${outputChannelPrefix} File status changed to ${status}`,
-			);
-			await emitter.emit(status);
-		}
+		status.setValue(newStatus);
+		// if (status !== newStatus) {
+		// 	status = newStatus;
+		// 	outputChannel.trace(
+		// 		`${outputChannelPrefix} File status changed to ${status}`,
+		// 	);
+		// 	await emitter.emit(status);
+		// }
 	});
 
 	const watcher = watch(files)
@@ -207,13 +203,14 @@ function createFileStatusTracker(
 
 	return {
 		status() {
-			return status;
+			return status.value();
 		},
 		onChange(callback) {
-			emitter.on(callback);
-			if (status) {
-				callback(status);
-			}
+			status.onChange(callback);
+			// emitter.on(callback);
+			// if (status) {
+			// 	callback(status);
+			// }
 		},
 		async dispose() {
 			await watcher.close();

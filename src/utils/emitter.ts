@@ -1,37 +1,11 @@
-import type { LogOutputChannel } from "vscode";
-
 import { immediateOnce } from "./immediate-once.ts";
 
 export type Callback<T> = (value: T) => Promise<void> | void;
 
-export interface Emitter<T> {
-	on(callback: Callback<T>): void;
-	emit(value: T): Promise<void>;
-}
-
-export function createEmitter<T>(outputChannel: LogOutputChannel): Emitter<T> {
-	const callbacks: Callback<T>[] = [];
-
-	return {
-		on(callback) {
-			callbacks.push(callback);
-		},
-		async emit(value) {
-			for (const callback of callbacks) {
-				try {
-					await callback(value);
-				} catch (error) {
-					outputChannel.error(error instanceof Error ? error : String(error));
-				}
-			}
-		},
-	};
-}
-
 export interface ValueEmitter<T> {
 	value(): T | undefined;
 	setValue(value: T): void;
-	on(callback: Callback<T>): void;
+	onChange(callback: Callback<T>): void;
 }
 
 export function createValueEmitter<T>(): ValueEmitter<T> {
@@ -56,8 +30,11 @@ export function createValueEmitter<T>(): ValueEmitter<T> {
 				emit();
 			}
 		},
-		on(callback) {
+		onChange(callback) {
 			callbacks.push(callback);
+			if (currentValue) {
+				void Promise.resolve(callback(currentValue)).catch(() => {});
+			}
 		},
 	};
 }

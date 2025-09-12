@@ -79,48 +79,16 @@ export default createPlugin(
 			}),
 		);
 
-		// context.subscriptions.push(
-		// 	commands.registerCommand("localstack.refreshStatusBar", () => {
-		// 		const setupStatus = setupStatusTracker.status();
-		// 		const localStackStatus = localStackStatusTracker.status();
-		// 		const localStackInstalled = cliStatusTracker.status() === "ok"
-
-		// 		statusBarItem.command = "localstack.showCommands";
-		// 		statusBarItem.backgroundColor =
-		// 			setupStatus === "setup_required"
-		// 				? new ThemeColor("statusBarItem.errorBackground")
-		// 				: undefined;
-
-		// 		const shouldSpin =
-		// 			localStackStatus === "starting" || localStackStatus === "stopping";
-		// 		const icon =
-		// 			setupStatus === "setup_required"
-		// 				? "$(error)"
-		// 				: shouldSpin
-		// 					? "$(sync~spin)"
-		// 					: "$(localstack-logo)";
-
-		// 		const statusText = localStackInstalled
-		// 			? `${localStackStatus}`
-		// 			: "not installed";
-		// 		statusBarItem.text = `${icon} LocalStack: ${statusText}`;
-
-		// 		statusBarItem.tooltip = "Show LocalStack commands";
-		// 		statusBarItem.show();
-		// 	}),
-		// );
-
-		const refreshStatusBar = immediateOnce(() => {
-			// await commands.executeCommand("localstack.refreshStatusBar");
+		const renderStatusBar = immediateOnce(() => {
 			const setupStatus = setupStatusTracker.status();
 			const localStackStatus = localStackStatusTracker.status();
 			const cliStatus = cliStatusTracker.status();
+			outputChannel.trace(
+				`[status-bar] setupStatus=${setupStatus} localStackStatus=${localStackStatus} cliStatus=${cliStatus}`,
+			);
 
-			if (
-				setupStatus === undefined ||
-				localStackStatus === undefined ||
-				cliStatus === undefined
-			) {
+			// Skip rendering the status bar if any of the status checks is not ready.
+			if (setupStatus === undefined || cliStatus === undefined) {
 				return;
 			}
 
@@ -151,12 +119,12 @@ export default createPlugin(
 
 		localStackStatusTracker.onChange(() => {
 			outputChannel.trace("[status-bar]: localStackStatusTracker changed");
-			refreshStatusBar();
+			renderStatusBar();
 		});
 
 		setupStatusTracker.onChange(() => {
 			outputChannel.trace("[status-bar]: setupStatusTracker changed");
-			refreshStatusBar();
+			renderStatusBar();
 		});
 	},
 );

@@ -1,4 +1,3 @@
-import EventEmitter from "node:events";
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
 import { isAbsolute } from "node:path";
@@ -9,11 +8,9 @@ import type { CancellationToken, LogOutputChannel, Disposable } from "vscode";
 
 import { CLI_PATHS, LOCALSTACK_DOCKER_IMAGE_NAME } from "../constants.ts";
 
-import { createEmitter, createValueEmitter } from "./emitter.ts";
-import type { Callback } from "./emitter.ts";
+import { createValueEmitter } from "./emitter.ts";
 import { exec } from "./exec.ts";
 import { immediateOnce } from "./immediate-once.ts";
-import { setIntervalPromise } from "./promises.ts";
 import type { SetupStatus } from "./setup-status.ts";
 import { spawn } from "./spawn.ts";
 import type { SpawnOptions } from "./spawn.ts";
@@ -100,16 +97,6 @@ async function findLocalStack(): Promise<CliCheckResult> {
 			executable,
 			upToDate,
 		};
-		// const {found, executable, upToDate} = await verifyLocalStackCli(customLocation);
-		// if (!found) {
-		// 	throw new Error(`Configured LocalStack CLI location '${customLocation}' does not exist`);
-		// }
-		// if (!executable) {
-		// 	throw new Error(`Configured LocalStack CLI location '${customLocation}' is not executable`);
-		// }
-		// if (!upToDate) {
-		// 	throw new Error(`Configured LocalStack CLI location '${customLocation}' is outdated (version < 4)`);
-		// }
 	}
 
 	// Fall back to default search paths
@@ -175,71 +162,17 @@ export const spawnLocalStack = async (
 export type LocalStackCliStatus = "not_found" | "outdated" | "ok";
 
 export interface LocalStackCliTracker extends Disposable {
-	// setupStatus(): SetupStatus | undefined;
-	// onSetupStatusChange(
-	// 	callback: (status: SetupStatus | undefined) => void,
-	// ): void;
-	// cli(): CliCheckResult | undefined;
-	// onCliChange(callback: (cli: CliCheckResult | undefined) => void): void;
-	// cliStatus(): LocalStackCliStatus | undefined;
-	// onCliStatusChange(callback: (status: LocalStackCliStatus) => void): void;
-
 	status(): SetupStatus | undefined;
 	onStatusChange(callback: (status: SetupStatus | undefined) => void): void;
 	cliPath(): string | undefined;
 	onCliPathChange(callback: (cliPath: string | undefined) => void): void;
 }
 
-function areCliCheckResultsDifferent(
-	resultA: CliCheckResult | undefined,
-	resultB: CliCheckResult | undefined,
-): boolean {
-	if (resultA?.cliPath !== resultB?.cliPath) {
-		return true;
-	}
-	if (resultA?.found !== resultB?.found) {
-		return true;
-	}
-	if (resultA?.executable !== resultB?.executable) {
-		return true;
-	}
-	return false;
-}
-
-function statusFromCliCheckResult(
-	cli: CliCheckResult | undefined,
-): LocalStackCliStatus {
-	if (!cli?.found || !cli.executable) {
-		return "not_found";
-	}
-	if (cli.upToDate === false) {
-		return "outdated";
-	}
-	return "ok";
-}
-
 export function createCliStatusTracker(
 	outputChannel: LogOutputChannel,
 ): LocalStackCliTracker {
-	// const emitter = new EventEmitter<{
-	// 	setupStatus: [SetupStatus | undefined];
-	// 	cliStatus: [LocalStackCliStatus | undefined];
-	// 	cli: [CliCheckResult | undefined];
-	// }>();
-
-	// emitter.emit("setupStatus", )
-
 	const status = createValueEmitter<SetupStatus>();
 	const cliPath = createValueEmitter<string | undefined>();
-	// const cliStatus = createValueEmitter<LocalStackCliStatus>();
-
-	// const statusEmitter = createEmitter<LocalStackCliStatus>(outputChannel);
-	// let currentStatus: LocalStackCliStatus | undefined;
-
-	// let currentCli: CliCheckResult | undefined;
-	// const cliPathEmitter = createEmitter<CliCheckResult | undefined>(
-	// 	outputChannel,
-	// );
 
 	const track = immediateOnce(async () => {
 		const newCli = await findLocalStack().catch(() => undefined);
@@ -251,17 +184,6 @@ export function createCliStatusTracker(
 				: "setup_required",
 		);
 		cliPath.setValue(newCli?.cliPath);
-
-		// if (areCliCheckResultsDifferent(currentCli, newCli)) {
-		// 	currentCli = newCli;
-		// 	void cliPathEmitter.emit(currentCli);
-		// }
-
-		// const newStatus = statusFromCliCheckResult(newCli);
-		// if (currentStatus !== newStatus) {
-		// 	currentStatus = newStatus;
-		// 	void statusEmitter.emit(newStatus);
-		// }
 	});
 
 	const watcher = watch(
@@ -290,35 +212,17 @@ export function createCliStatusTracker(
 	track();
 
 	return {
-		// cli() {
-		// 	return currentCli;
-		// },
-		// onCliChange(callback) {
-		// 	cliPathEmitter.on(callback);
-		// 	if (currentCli) {
-		// 		callback(currentCli);
-		// 	}
-		// },
-		// cliStatus() {
-		// 	return currentStatus;
-		// },
-		// onCliStatusChange(callback) {
-		// 	statusEmitter.on(callback);
-		// 	if (currentStatus) {
-		// 		callback(currentStatus);
-		// 	}
-		// },
 		cliPath() {
 			return cliPath.value();
 		},
 		onCliPathChange(callback) {
-			cliPath.on(callback);
+			cliPath.onChange(callback);
 		},
 		status() {
 			return status.value();
 		},
 		onStatusChange(callback) {
-			status.on(callback);
+			status.onChange(callback);
 		},
 		async dispose() {
 			await watcher.close();
