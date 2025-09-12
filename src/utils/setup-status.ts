@@ -47,6 +47,26 @@ export async function createSetupStatusTracker(
 	);
 
 	const checkStatusNow = async () => {
+		const allStatusesInitialized = Object.values({
+			awsProfileTracker: awsProfileTracker.status(),
+			authTracker: localStackAuthenticationTracker.status(),
+			licenseTracker: licenseTracker.status(),
+		}).every((check) => check !== undefined);
+
+		if (!allStatusesInitialized) {
+			outputChannel.trace(
+				`[setup-status] File watchers not initialized yet, skipping status check : ${JSON.stringify(
+					{
+						awsProfileTracker: awsProfileTracker.status() ?? "undefined",
+						authTracker:
+							localStackAuthenticationTracker.status() ?? "undefined",
+						licenseTracker: licenseTracker.status() ?? "undefined",
+					},
+				)}`,
+			);
+			return;
+		}
+
 		statuses = await checkSetupStatus(outputChannel);
 
 		const setupRequired = [
@@ -255,7 +275,7 @@ function createLicenseStatusTracker(
 	return createFileStatusTracker(
 		outputChannel,
 		"[setup-status.license]",
-		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTracker
+		[LOCALSTACK_AUTH_FILENAME, LICENSE_FILENAME], //TODO rewrite to depend on change in localStackAuthenticationTrackerl
 		async () =>
 			(await checkIsLicenseValid(outputChannel)) ? "ok" : "setup_required",
 	);
