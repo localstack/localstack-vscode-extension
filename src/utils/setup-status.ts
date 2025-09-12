@@ -47,26 +47,6 @@ export async function createSetupStatusTracker(
 	);
 
 	const checkStatusNow = async () => {
-		const statusesInitialized = Object.values({
-			awsProfileTracker: awsProfileTracker.status(),
-			authTracker: localStackAuthenticationTracker.status(),
-			licenseTracker: licenseTracker.status(),
-		}).every((check) => check !== undefined);
-
-		if (!statusesInitialized) {
-			outputChannel.trace(
-				`[setup-status] File watchers not initialized yet, skipping status check : ${JSON.stringify(
-					{
-						awsProfileTracker: awsProfileTracker.status() ?? "undefined",
-						authTracker:
-							localStackAuthenticationTracker.status() ?? "undefined",
-						licenseTracker: licenseTracker.status() ?? "undefined",
-					},
-				)}`,
-			);
-			return;
-		}
-
 		statuses = await checkSetupStatus(outputChannel);
 
 		const setupRequired = [
@@ -119,16 +99,6 @@ export async function createSetupStatusTracker(
 		startChecking();
 		return Promise.resolve();
 	});
-
-	outputChannel.trace(
-		`[setup-status.aws-profile] status before the first check : ${awsProfileTracker.status()}`,
-	);
-	outputChannel.trace(
-		`[setup-status.auth] status before the first checkk : ${localStackAuthenticationTracker.status()}`,
-	);
-	outputChannel.trace(
-		`[setup-status.license] status before the first check : ${licenseTracker.status()}`,
-	);
 
 	await checkStatusNow();
 
@@ -212,6 +182,9 @@ function createFileStatusTracker(
 			outputChannel.error(`${outputChannelPrefix} Error watching file`);
 			outputChannel.error(error instanceof Error ? error : String(error));
 		});
+
+	// Update the status immediately on file tracker initialization
+	void updateStatus();
 
 	return {
 		status() {
