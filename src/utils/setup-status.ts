@@ -80,7 +80,12 @@ export async function createSetupStatusTracker(
 		if (status !== newStatus) {
 			status = newStatus;
 			outputChannel.trace(
-				`[setup-status] Status changed to ${JSON.stringify(statuses)}`,
+				`[setup-status] Status changed to ${JSON.stringify({
+					...statuses,
+					awsProfileTracker: awsProfileTracker.status() ?? "undefined",
+					authTracker: localStackAuthenticationTracker.status() ?? "undefined",
+					licenseTracker: licenseTracker.status() ?? "undefined",
+				})}`,
 			);
 			await emitter.emit(status);
 		}
