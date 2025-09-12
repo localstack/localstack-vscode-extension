@@ -20,7 +20,7 @@ export default createPlugin(
 			commands.registerCommand("localstack.start", async () => {
 				const cliPath = cliStatusTracker.cliPath();
 				if (!cliPath) {
-					window.showInformationMessage(
+					void window.showInformationMessage(
 						"LocalStack CLI could not be found. Please, run the setup wizard.",
 					);
 					return;
@@ -43,7 +43,7 @@ export default createPlugin(
 			commands.registerCommand("localstack.stop", () => {
 				const cliPath = cliStatusTracker.cliPath();
 				if (!cliPath) {
-					window.showInformationMessage(
+					void window.showInformationMessage(
 						"LocalStack CLI could not be found. Please, run the setup wizard.",
 					);
 					return;

@@ -112,10 +112,7 @@ export default createPlugin(
 			statusBarItem.text = `${icon} LocalStack: ${statusText}`;
 
 			statusBarItem.tooltip = "Show LocalStack commands";
-			// statusBarItem.show();
 		});
-
-		// refreshStatusBar();
 
 		localStackStatusTracker.onChange(() => {
 			outputChannel.trace("[status-bar]: localStackStatusTracker changed");

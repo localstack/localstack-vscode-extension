@@ -45,12 +45,6 @@ export default createPlugin(
 					});
 
 					const cliPath = cliStatusTracker.cliPath();
-					if (!cliPath) {
-						void window.showErrorMessage(
-							"LocalStack CLI is not configured. Please set it up before running the setup wizard.",
-						);
-						return;
-					}
 
 					void window.withProgress(
 						{
@@ -65,7 +59,7 @@ export default createPlugin(
 							{
 								const installationStartedAt = new Date().toISOString();
 								const { cancelled, skipped } = await runInstallProcess({
-									cliPath,
+									cliPath: cliStatusTracker.cliPath(),
 									progress,
 									cancellationToken,
 									outputChannel,
@@ -230,6 +224,14 @@ export default createPlugin(
 
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
+
+							const cliPath = cliStatusTracker.cliPath();
+							if (!cliPath) {
+								void window.showErrorMessage(
+									"LocalStack CLI is not configured. Please set it up before running the setup wizard.",
+								);
+								return;
+							}
 
 							// If an auth token has just been obtained or LocalStack has never been started,
 							// then there will be no license info to be reported by `localstack license info`.
