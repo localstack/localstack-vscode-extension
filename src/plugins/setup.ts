@@ -7,6 +7,7 @@ import {
 	saveAuthToken,
 	readAuthToken,
 } from "../utils/authenticate.ts";
+import { findLocalStack } from "../utils/cli.ts";
 import { configureAwsProfiles } from "../utils/configure-aws.ts";
 import { runInstallProcess } from "../utils/install.ts";
 import {
@@ -17,6 +18,14 @@ import {
 import { minDelay } from "../utils/promises.ts";
 import { updateDockerImage } from "../utils/setup.ts";
 import { get_setup_ended } from "../utils/telemetry.ts";
+
+async function getValidCliPath() {
+	const cli = await findLocalStack()
+	if (!cli.cliPath || !cli.executable || !cli.found || !cli.upToDate) {
+		return
+	}
+	return cli.cliPath
+}
 
 export default createPlugin(
 	"setup",
@@ -225,10 +234,14 @@ export default createPlugin(
 							/////////////////////////////////////////////////////////////////////
 							progress.report({ message: "Checking LocalStack license..." });
 
-							const cliPath = cliStatusTracker.cliPath();
+							// If the CLI status tracker doesn't have a valid CLI path yet,
+							// we must find it manually. This may occur when installing the
+							// CLI as part of the setup process: the CLI status tracker will
+							// detect the CLI path the next tick.
+							const cliPath = cliStatusTracker.cliPath() ?? await getValidCliPath();
 							if (!cliPath) {
 								void window.showErrorMessage(
-									"LocalStack CLI is not configured. Please set it up before running the setup wizard.",
+									"Could not access the LocalStack CLI.",
 								);
 								return;
 							}

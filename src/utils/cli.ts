@@ -84,7 +84,7 @@ interface CliCheckResult {
 	upToDate: boolean | undefined;
 }
 
-async function findLocalStack(): Promise<CliCheckResult> {
+export async function findLocalStack(): Promise<CliCheckResult> {
 	// Check if a custom path is configured
 	const config = workspace.getConfiguration("localstack");
 	const customLocation = config.get<string | null>("cli.location");
